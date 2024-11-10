@@ -36,57 +36,50 @@
 #include "config.h"
 #include "display_utils.h"
 #ifndef USE_HTTP
-  #include <WiFiClientSecure.h>
+#include <WiFiClientSecure.h>
 #endif
 
 #ifdef USE_HTTP
-  static const uint16_t OWM_PORT = 80;
+static const uint16_t OWM_PORT = 80;
 #else
-  static const uint16_t OWM_PORT = 443;
+static const uint16_t OWM_PORT = 443;
 #endif
 
-/* Power-on and connect WiFi.
- * Takes int parameter to store WiFi RSSI, or “Received Signal Strength
- * Indicator"
- *
- * Returns WiFi status.
- */
-wl_status_t startWiFi(int &wifiRSSI)
+// Power-on and connect WiFi.
+wl_status_t startWiFi()
 {
-  WiFi.mode(WIFI_STA);
-  Serial.printf("%s '%s'", "Connecting to", WIFI_SSID);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+	WiFi.mode(WIFI_STA);
+	Serial.printf("%s '%s'", "Connecting to", WIFI_SSID);
+	WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  // timeout if WiFi does not connect in WIFI_TIMEOUT ms from now
-  unsigned long timeout = millis() + WIFI_TIMEOUT;
-  wl_status_t connection_status = WiFi.status();
+	// timeout if WiFi does not connect in WIFI_TIMEOUT ms from now
+	unsigned long timeout = millis() + WIFI_TIMEOUT;
+	wl_status_t connection_status = WiFi.status();
 
-  while ((connection_status != WL_CONNECTED) && (millis() < timeout))
-  {
-    Serial.print(".");
-    delay(50);
-    connection_status = WiFi.status();
-  }
-  Serial.println();
+	while ((connection_status != WL_CONNECTED) && (millis() < timeout))
+	{
+		Serial.print(".");
+		delay(50);
+		connection_status = WiFi.status();
+	}
+	Serial.println();
 
-  if (connection_status == WL_CONNECTED)
-  {
-    wifiRSSI = WiFi.RSSI(); // get WiFi signal strength now, because the WiFi
-                            // will be turned off to save power!
-    Serial.println("IP: " + WiFi.localIP().toString());
-  }
-  else
-  {
-    Serial.printf("%s '%s'\n", "Could not connect to", WIFI_SSID);
-  }
-  return connection_status;
-} // startWiFi
+	if (connection_status != WL_CONNECTED)
+	{
+		Serial.printf("%s '%s'\n", "Could not connect to", WIFI_SSID);
+		return connection_status;
+	}
+
+	Serial.println("IP: " + WiFi.localIP().toString());
+	Serial.printf("RSSI: %d\n", WiFi.RSSI());
+	return connection_status;
+}
 
 // Disconnect and power-off WiFi.
 void killWiFi()
 {
-  WiFi.disconnect();
-  WiFi.mode(WIFI_OFF);
+	WiFi.disconnect();
+	WiFi.mode(WIFI_OFF);
 }
 
 /* Prints the local time to serial monitor.
@@ -95,14 +88,14 @@ void killWiFi()
  */
 bool printLocalTime(tm *timeInfo)
 {
-  int attempts = 0;
-  while (!getLocalTime(timeInfo) && attempts++ < 3)
-  {
-    Serial.println("Failed to get the time!");
-    return false;
-  }
-  Serial.println(timeInfo, "%A, %B %d, %Y %H:%M:%S");
-  return true;
+	int attempts = 0;
+	while (!getLocalTime(timeInfo) && attempts++ < 3)
+	{
+		Serial.println("Failed to get the time!");
+		return false;
+	}
+	Serial.println(timeInfo, "%A, %B %d, %Y %H:%M:%S");
+	return true;
 } // printLocalTime
 
 /* Waits for NTP server time sync, adjusted for the time zone specified in
@@ -114,35 +107,29 @@ bool printLocalTime(tm *timeInfo)
  */
 bool waitForSNTPSync(tm *timeInfo)
 {
-  // Wait for SNTP synchronization to complete
-  unsigned long timeout = millis() + NTP_TIMEOUT;
-  if ((sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET)
-      && (millis() < timeout))
-  {
-    Serial.print("Waiting for SNTP synchronization.");
-    delay(100); // ms
-    while ((sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET)
-        && (millis() < timeout))
-    {
-      Serial.print(".");
-      delay(100); // ms
-    }
-    Serial.println();
-  }
-  return printLocalTime(timeInfo);
+	// Wait for SNTP synchronization to complete
+	unsigned long timeout = millis() + NTP_TIMEOUT;
+	if ((sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET) && (millis() < timeout))
+	{
+		Serial.print("Waiting for SNTP synchronization.");
+		delay(100); // ms
+		while ((sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET) && (millis() < timeout))
+		{
+			Serial.print(".");
+			delay(100); // ms
+		}
+		Serial.println();
+	}
+	return printLocalTime(timeInfo);
 } // waitForSNTPSync
 
 /* Prints debug information about heap usage.
  */
-void printHeapUsage() {
-  Serial.println("[debug] Heap Size       : "
-                 + String(ESP.getHeapSize()) + " B");
-  Serial.println("[debug] Available Heap  : "
-                 + String(ESP.getFreeHeap()) + " B");
-  Serial.println("[debug] Min Free Heap   : "
-                 + String(ESP.getMinFreeHeap()) + " B");
-  Serial.println("[debug] Max Allocatable : "
-                 + String(ESP.getMaxAllocHeap()) + " B");
-  return;
+void printHeapUsage()
+{
+	Serial.println("[debug] Heap Size       : " + String(ESP.getHeapSize()) + " B");
+	Serial.println("[debug] Available Heap  : " + String(ESP.getFreeHeap()) + " B");
+	Serial.println("[debug] Min Free Heap   : " + String(ESP.getMinFreeHeap()) + " B");
+	Serial.println("[debug] Max Allocatable : " + String(ESP.getMaxAllocHeap()) + " B");
+	return;
 }
-

@@ -14,17 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-#ifndef __CLIENT_UTILS_H__
-#define __CLIENT_UTILS_H__
+#pragma once
 
 #include <Arduino.h>
 #include "config.h"
 
-wl_status_t startWiFi(int &wifiRSSI);
+wl_status_t startWiFi();
 void killWiFi();
 bool waitForSNTPSync(tm *timeInfo);
 bool printLocalTime(tm *timeInfo);
-
-#endif
-

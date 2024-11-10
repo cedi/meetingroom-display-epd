@@ -59,17 +59,15 @@ done
 for f in $PNG_FILES
 do
   echo "Generating header for $f..."
-  out="${HEADER_PATH}/$(basename $f .png | tr -s -c [:alnum:] _)${1}x${1}.h"
+  out="${HEADER_PATH}/$(basename $f .png | tr -s -c [:alnum:]).h"
   python3 png_to_header.py -i $f -o $out
 done
 
 echo "Generating include statements..."
-echo "#ifndef __ICONS_${1}x${1}_H__" > $HEADER
-echo "#define __ICONS_${1}x${1}_H__" >> $HEADER
+echo "#pragma once" > $HEADER
 for f in ${HEADER_PATH}/*.h
 do
     echo "#include \"${1}x${1}/$(basename $f)\"" >> $HEADER
 done
-echo "#endif" >> $HEADER
 
 echo "Done."

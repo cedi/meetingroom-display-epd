@@ -40,6 +40,9 @@ class BatteryPercentage : public StatusBarComponent
 public:
     BatteryPercentage(DisplayBuffer *buffer, int height) : StatusBarComponent(buffer, 24, height){}
     virtual void render(int x, int y) const override;
+
+protected:
+    const uint8_t *getBatBitmap(uint32_t batPercent) const;
 };
 
 class WiFiStatus : public StatusBarComponent
@@ -47,11 +50,14 @@ class WiFiStatus : public StatusBarComponent
 public:
     WiFiStatus(DisplayBuffer *buffer, int height) : StatusBarComponent(buffer, 24, height){}
     virtual void render(int x, int y) const override;
+
+protected:
+    const uint8_t *getWiFiBitmap(int rssi) const;
 };
 
 class DateTime : public StatusBarComponent
 {
 public:
-    DateTime(DisplayBuffer *buffer, int height) : StatusBarComponent(buffer, 140, height){}
+    DateTime(DisplayBuffer *buffer, int height) : StatusBarComponent(buffer, 155, height){}
     virtual void render(int x, int y) const override;
 };

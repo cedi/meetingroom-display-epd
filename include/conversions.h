@@ -14,9 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
-#ifndef __CONVERSIONS_H__
-#define __CONVERSIONS_H__
+#pragma once
 
 float kelvin_to_celsius(float kelvin);
 float kelvin_to_fahrenheit(float kelvin);
@@ -43,6 +41,3 @@ float meters_to_feet(float meters);
 
 float millimeters_to_inches(float meters);
 float millimeters_to_centimeters(float meters);
-
-#endif
-

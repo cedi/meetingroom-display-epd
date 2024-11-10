@@ -5,7 +5,7 @@ specified size of .png which will then be converted to header files each
 containing a bitmap, formatted into a c-style array for use by the AdafruitGFX
 library. The output files will be in a new directory, ./icons. To add the new
 icons, you must manually move the newly generated icons folder to
-platformio/lib/esp32-weather-epd-assets/icons.
+platformio/lib/display-assets/icons.
 
 Usage:
   bash svg_to_headers.sh <size_of_output_image>
@@ -38,34 +38,11 @@ Visibility Icon 'visibility_icon.svg' in the sub-directory 'svg'
 ********************************************************************************
 
 ********************************************************************************
-House Icon 'house.svg' in the sub-directory 'svg'
-  Retrieved from: https://seekicon.com/free-icon/house_16
-  Licensed under MIT License: http://opensource.org/licenses/mit-license.html
-********************************************************************************
-
-********************************************************************************
 .svg files prefixed with 'wifi' (wifi**.svg) in the sub-directory 'svg'
 Warning Alert Icon 'warning_icon.svg' in the sub-directory 'svg'
 Warning Alert Icon 'error_icon.svg' in the sub-directory 'svg'
   Retrieved from: https://github.com/phosphor-icons/homepage
   Licensed under MIT License: http://opensource.org/licenses/mit-license.html
-********************************************************************************
-
-********************************************************************************
-House Icon 'house.svg' in the sub-directory 'svg'
-  Retrieved from: https://seekicon.com/free-icon/house_16
-  Licensed under MIT License: http://opensource.org/licenses/mit-license.html
-
-'house_temperature.svg', 'house_humidity.svg', and 'house_rainsdrops.svg' were
-created by transforming icons from https://github.com/erikflowers/weather-icons
-with 'house.svg' and as such are
-  Licensed under SIL OFL 1.1: http://scripts.sil.org/OFL
-********************************************************************************
-
-********************************************************************************
-'ionizing_radiation_symbol.svg' in the sub-directory 'svg'
-  Retrieved from: https://svgsilh.com/image/309911.html
-  Licensed under CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/
 ********************************************************************************
 
 ********************************************************************************
@@ -75,8 +52,13 @@ with 'house.svg' and as such are
 ********************************************************************************
 
 ********************************************************************************
-Wind Direction Icons 'meteorological_wind_direction_**deg.svg' in the
-sub-directory 'svg'
-  Retrieved from: https://www.onlinewebfonts.com/icon/251550
-  Licensed under CC BY 3.0: http://creativecommons.org/licenses/by/3.0
+'calendar.svg' in the sub-directory 'svg'
+  Retrieved from: https://www.svgrepo.com/svg/437529/calendar
+  Licensed under MIT License: http://opensource.org/licenses/mit-license.html
+********************************************************************************
+
+********************************************************************************
+'x-symbol.svg' in the sub-directory 'svg'
+  Retrieved from: https://www.svgrepo.com/svg/12848/x-symbol
+  Licensed under CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/
 ********************************************************************************

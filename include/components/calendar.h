@@ -7,14 +7,20 @@ class CalendarEntry
 {
 protected:
     DisplayBuffer *buffer;
+    bool pastEvent;
 
 public:
-    int width;
-    int height;
+    const int width;
+    const int height;
 
 public:
     CalendarEntry(DisplayBuffer *buffer, int width)
-        : buffer(buffer), width(width), height(48)
+        : CalendarEntry(buffer, width, false)
+    {
+    }
+
+    CalendarEntry(DisplayBuffer *buffer, int width, bool pastEvent)
+        : buffer(buffer), pastEvent(pastEvent), width(width), height(48)
     {
     }
 

@@ -15,8 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __DISPLAY_UTILS_H__
-#define __DISPLAY_UTILS_H__
+#pragma once
 
 #include <vector>
 #include <time.h>
@@ -24,13 +23,8 @@
 
 uint32_t readBatteryVoltage();
 uint32_t calcBatPercent(uint32_t v, uint32_t minv, uint32_t maxv);
-const uint8_t *getBatBitmap24(uint32_t batPercent);
 void getDateStr(String &s, tm *timeInfo);
 void getRefreshTimeStr(String &s, bool timeSuccess, tm *timeInfo);
 const char *getWiFidesc(int rssi);
-const uint8_t *getWiFiBitmap24(int rssi);
 const char *getWifiStatusPhrase(wl_status_t status);
 void disableBuiltinLED();
-
-#endif
-
