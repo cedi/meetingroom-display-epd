@@ -3,6 +3,7 @@
 #include "components/statusbar.h"
 #include "components/calendar.h"
 #include "components/status.h"
+#include "icons/196x196/wi_fire_196x196.h"
 
 Display::Display(int8_t pin_epd_pwr, int8_t pin_epd_sck, int8_t pin_epd_miso, int8_t pin_epd_mosi, int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy)
     : display(GxEPD2_750_T7(pin_epd_cs, pin_epd_dc, pin_epd_rst, pin_epd_busy)),
@@ -18,7 +19,11 @@ Display::Display(int8_t pin_epd_pwr, int8_t pin_epd_sck, int8_t pin_epd_miso, in
 
     components.push_back(new StatusBar(buffer));
     components.push_back(new Calendar(buffer));
-    components.push_back(new Status(buffer));
+
+    Status *status = new Status(buffer);
+    status->setImportant();
+    status->setIcon(wi_fire_196x196);
+    components.push_back(status);
 }
 
 void Display::init()

@@ -7,7 +7,7 @@
 #include "display_utils.h"
 #include "fonts/FreeSans.h"
 
-#include "icons/24x24/wi_refresh_24x24.h"
+#include "icons/32x32/wi_refresh_32x32.h"
 
 StatusBar::StatusBar(DisplayBuffer *buffer)
     : DisplayComponent(buffer, 0, 0, buffer->width(), StatusBarHeight)
@@ -15,7 +15,6 @@ StatusBar::StatusBar(DisplayBuffer *buffer)
     rightBound.push_back(new BatteryPercentage(buffer, height));
     rightBound.push_back(new WiFiStatus(buffer, height));
 
-    leftBound.push_back(new DateTime(buffer, height));
     leftBound.push_back(new DateTime(buffer, height));
 }
 
@@ -63,7 +62,13 @@ void DateTime::render(int x, int y) const
     prefs.end();
 
     buffer->drawRect(x, y, width, height);
-    buffer->drawBitmap(x, y, wi_refresh_24x24, 24, 24);
 
-    buffer->drawString(x + 25, y, refreshTimeStr, Alignment::Top);
+    // I should be using a 24x24 icon here, but I found the
+    // 24x24 is a little too small for my liking. So I'm using
+    // the bigger 32x32 version, but I have to adjust the offsets
+    // just a little so it is center :)
+    buffer->drawBitmap(x - 3, y - 3, wi_refresh_32x32, 32, 32);
+
+    buffer->setFont(&FONT_8pt8b);
+    buffer->drawString(x + 24, y + height/2 -1, refreshTimeStr, Alignment::VerticalCenter | Alignment::Left);
 }

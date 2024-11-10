@@ -16,7 +16,6 @@ public:
     StatusBarComponent(DisplayBuffer *buffer, int width, int height)
         : buffer(buffer), width(width), height(height)
     {
-
     }
 
     virtual void render(int x, int y) const = 0;
@@ -53,6 +52,6 @@ public:
 class DateTime : public StatusBarComponent
 {
 public:
-    DateTime(DisplayBuffer *buffer, int height) : StatusBarComponent(buffer, 115, height){}
+    DateTime(DisplayBuffer *buffer, int height) : StatusBarComponent(buffer, 140, height){}
     virtual void render(int x, int y) const override;
 };

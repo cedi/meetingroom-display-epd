@@ -25,6 +25,12 @@ enum Color : uint16_t
     LightGrey = GxEPD_LIGHTGREY
 };
 
+struct TextSize
+{
+uint16_t width;
+uint16_t height;
+};
+
 class DisplayBuffer
 {
 private:
@@ -52,6 +58,10 @@ public:
     void clearDisplay();
 
     void drawString(int16_t x, int16_t y, const String &text, uint8_t alignment = Alignment::Left);
+    TextSize* getStringBounds(const String &text);
+
     void drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[], int16_t width, int16_t height);
     void drawRect(int16_t x, int16_t y, int16_t w, int16_t h) { display->drawRect(x, y, w, h, foregroundColor); }
+    void fillBackground(int16_t x, int16_t y, int16_t w, int16_t h) { display->fillRect(x, y, w, h, backgroundColor); }
+    void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t thickness);
 };
