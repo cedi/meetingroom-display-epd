@@ -32,8 +32,8 @@
 #define PIN_EPD_PWR 26 // Irrelevant if directly connected to 3.3V
 
 // WIFI
-#define WIFI_SSID "Elbschloss"
-#define WIFI_PASSWORD "pZUfcu4xCg7p"
+#define WIFI_SSID "SSID"
+#define WIFI_PASSWORD "WIFIPSK"
 #define WIFI_TIMEOUT  10000 // ms, WiFi connection timeout.
 
 // HTTP
