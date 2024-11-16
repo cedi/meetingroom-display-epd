@@ -6,6 +6,7 @@
 #include "components/statusbar.h"
 #include "components/status.h"
 #include "components/calendar.h"
+#include "display_utils.h"
 
 class Display
 {
@@ -39,7 +40,8 @@ public:
 	// Display configuration
 public:
 	void setStatus(String message, bool isImportant = false, const uint8_t *icon = NULL);
-	void setCalendar();
+	void setCalendar(const CalendarEntries& calendar);
+	Calendar *getCalendar() { return calendar; }
 
 	// Rendering functions
 public:

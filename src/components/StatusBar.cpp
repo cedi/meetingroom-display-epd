@@ -130,7 +130,6 @@ void DateTime::render(int x, int y) const
 	Preferences prefs;
 	prefs.begin(NVS_NAMESPACE, true);
 	String refreshTimeStr = prefs.getString("refreshTimeStr");
-	String dateStr = prefs.getString("dateStr");
 	prefs.end();
 
 	buffer->drawLine(x + width, y, x + width, y + height);

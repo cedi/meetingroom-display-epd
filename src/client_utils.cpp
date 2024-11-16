@@ -36,7 +36,7 @@
 #include "config.h"
 #include "display_utils.h"
 #ifndef USE_HTTP
-#include <WiFiClientSecure.h>
+#include <WiFiClient.h>
 #endif
 
 #ifdef USE_HTTP

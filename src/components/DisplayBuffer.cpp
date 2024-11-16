@@ -26,21 +26,17 @@ void DisplayBuffer::clearDisplay()
 }
 
 // Draw a String on x/y coordinate
-void DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t alignment)
+Rect DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t alignment)
 {
-	int16_t x1, y1;
-	uint16_t w, h;
-
-	display->setTextColor(foregroundColor);
-	display->getTextBounds(text, x, y, &x1, &y1, &w, &h);
+	TextSize *size = getStringBounds(x, y, text);
 
 	if (hasAlignment(alignment, Alignment::HorizontalCenter))
 	{
-		x = x - w / 2;
+		x -= size->width / 2;
 	}
 	else if (hasAlignment(alignment, Alignment::Right))
 	{
-		x = x - w;
+		x -= size->width;
 	}
 	else if (hasAlignment(alignment, Alignment::Left))
 	{
@@ -49,11 +45,11 @@ void DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t
 
 	if (hasAlignment(alignment, Alignment::VerticalCenter))
 	{
-		y = y + h / 2;
+		y += size->height / 2;
 	}
 	else if (hasAlignment(alignment, Alignment::Top))
 	{
-		y = y + h;
+		y += size->height;
 	}
 	else if (hasAlignment(alignment, Alignment::Bottom))
 	{
@@ -61,14 +57,23 @@ void DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t
 	}
 
 	display->setCursor(x, y);
+	display->setTextColor(foregroundColor);
 	display->print(text);
+
+	Rect r;
+	r.x = x;
+	r.y = y;
+	r.width = size->width;
+	r.height = size->height;
+
+	return r;
 }
 
-TextSize *DisplayBuffer::getStringBounds(const String &text)
+TextSize *DisplayBuffer::getStringBounds(int16_t x, int16_t y, const String &text)
 {
 	int16_t x1, y1;
 	uint16_t w, h;
-	display->getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
+	display->getTextBounds(text, x, y, &x1, &y1, &w, &h);
 
 	TextSize *size = new TextSize();
 	size->width = w;
@@ -76,10 +81,8 @@ TextSize *DisplayBuffer::getStringBounds(const String &text)
 	return size;
 }
 
-TextSize *DisplayBuffer::getStringBounds(const String &text, uint16_t max_width, uint16_t max_lines)
+TextSize *DisplayBuffer::getStringBounds(int16_t x, int16_t y, const String &text, uint16_t max_width, uint16_t max_lines)
 {
-	Serial.printf("text: %s\n", text.c_str());
-
 	uint16_t current_line = 0;
 	String textRemaining = text;
 
@@ -90,22 +93,17 @@ TextSize *DisplayBuffer::getStringBounds(const String &text, uint16_t max_width,
 	// print until we reach max_lines or no more text remains
 	while (current_line < max_lines && !textRemaining.isEmpty())
 	{
-		Serial.printf("current_line: %d, textRemaining: %s\n", current_line, textRemaining.c_str());
-
 		int16_t x1, y1;
 		uint16_t w, h;
 
-		display->getTextBounds(textRemaining, 0, 0, &x1, &y1, &w, &h);
-		int16_t line_spacing = h;
+		display->getTextBounds(textRemaining, x, y, &x1, &y1, &w, &h);
 
-		if(w > biggestTextSize->width)
+		if (w > biggestTextSize->width)
 		{
 			biggestTextSize->width = w;
 		}
 
 		biggestTextSize->height += h;
-
-		Serial.printf("current_line: %d, line_spacing: %d, max_height: %d\n", current_line, line_spacing, biggestTextSize->height);
 
 		int endIndex = textRemaining.length();
 		// check if remaining text is to wide, if it is then print what we can
@@ -142,17 +140,12 @@ TextSize *DisplayBuffer::getStringBounds(const String &text, uint16_t max_width,
 				subStr = subStr.substring(0, endIndex + 1);
 
 				char lastChar = subStr.charAt(endIndex);
-				if (lastChar == ' ')
+				if (lastChar == ' ' || lastChar == '-' || lastChar == ':')
 				{
 					// remove this char now so it is not counted towards line width
 					keepLastChar = 0;
 					subStr.remove(endIndex);
 					--endIndex;
-				}
-				else if (lastChar == '-')
-				{
-					// this char will be printed on this line and removed next iteration
-					keepLastChar = 1;
 				}
 
 				if (current_line < max_lines - 1)
@@ -171,24 +164,18 @@ TextSize *DisplayBuffer::getStringBounds(const String &text, uint16_t max_width,
 						subStr = subStr + "...";
 					}
 				}
-
 			}
 		}
-
-		Serial.printf("current_line: %d, line_spacing: %d, max_height: %d, substr: %s\n", current_line, line_spacing, biggestTextSize->height, subStr.c_str());
 
 		// update textRemaining to no longer include what was printed
 		// +1 for exclusive bounds, +1 to get passed space/dash
 		textRemaining = textRemaining.substring(endIndex + 2 - keepLastChar);
-
-		Serial.printf("current_line: %d, line_spacing: %d, max_height: %d, textRemaining: %s\n", current_line, line_spacing, biggestTextSize->height, textRemaining.c_str());
 
 		++current_line;
 	}
 
 	return biggestTextSize;
 }
-
 
 void DisplayBuffer::drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[], int16_t width, int16_t height)
 {
@@ -213,14 +200,21 @@ void DisplayBuffer::drawRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
  *       max_width exist in text, then the string will be printed beyond
  *       max_width.
  */
-void DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t alignment, uint16_t max_width, uint16_t max_lines)
+Rect DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t alignment, uint16_t max_width, uint16_t max_lines)
 {
+	Rect textRect;
+	textRect.x = x;
+	textRect.y = y;
+	textRect.width = 0;
+	textRect.height = 0;
+
 	uint16_t current_line = 0;
 	String textRemaining = text;
 
 	// print until we reach max_lines or no more text remains
 	while (current_line < max_lines && !textRemaining.isEmpty())
 	{
+
 		int16_t x1, y1;
 		uint16_t w, h;
 
@@ -234,6 +228,7 @@ void DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t
 		int keepLastChar = 0;
 		while (w > max_width && splitAt != -1)
 		{
+
 			if (keepLastChar)
 			{
 				// if we kept the last character during the last iteration of this while
@@ -262,17 +257,12 @@ void DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t
 				subStr = subStr.substring(0, endIndex + 1);
 
 				char lastChar = subStr.charAt(endIndex);
-				if (lastChar == ' ')
+				if (lastChar == ' ' || lastChar == '-' || lastChar == ':')
 				{
 					// remove this char now so it is not counted towards line width
 					keepLastChar = 0;
 					subStr.remove(endIndex);
 					--endIndex;
-				}
-				else if (lastChar == '-')
-				{
-					// this char will be printed on this line and removed next iteration
-					keepLastChar = 1;
 				}
 
 				if (current_line < max_lines - 1)
@@ -291,11 +281,25 @@ void DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t
 						subStr = subStr + "...";
 					}
 				}
-
 			}
 		}
 
-		drawString(x, y + (current_line * line_spacing), subStr, alignment);
+		Rect r = drawString(x, y + (current_line * line_spacing), subStr, alignment);
+
+		if (r.x < textRect.x) {
+			textRect.x = r.x;
+		}
+
+		if (r.width > textRect.width) {
+			textRect.width = r.width;
+		}
+
+		// the alignment made the y move upwards
+		if (r.y < textRect.y) {
+			textRect.y = r.y;
+		}
+
+		textRect.height += r.height + (current_line * line_spacing);
 
 		// update textRemaining to no longer include what was printed
 		// +1 for exclusive bounds, +1 to get passed space/dash
@@ -303,4 +307,6 @@ void DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t
 
 		++current_line;
 	}
+
+	return textRect;
 }

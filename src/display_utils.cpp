@@ -1,34 +1,18 @@
-/* Display helper utilities for esp32-weather-epd.
- * Copyright (C) 2022-2024  Luke Marzen
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 #include <cmath>
 #include <vector>
 #include <Arduino.h>
 #include <driver/adc.h>
 #include <esp_adc_cal.h>
+#include <WiFiClient.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+
+#include "display_utils.h"
 
 #include "_strftime.h"
 #include "config.h"
 
-// icon header files
-
-
-/* Returns battery voltage in millivolts (mv).
- */
+// Returns battery voltage in millivolts (mv).
 uint32_t readBatteryVoltage()
 {
 	esp_adc_cal_characteristics_t adc_chars;
@@ -90,13 +74,23 @@ uint32_t calcBatPercent(uint32_t v, uint32_t minv, uint32_t maxv)
 	return p >= 100 ? 100 : p;
 } // end calcBatPercent
 
-
-
 // Gets string with the current date.
 void getDateStr(String &s, tm *timeInfo)
 {
 	char buf[48] = {};
 	_strftime(buf, sizeof(buf), DATE_FORMAT, timeInfo);
+	s = buf;
+
+	// remove double spaces. %e will add an extra space, ie. " 1" instead of "1"
+	s.replace("  ", " ");
+	return;
+}
+
+// Gets string with the current time.
+void getTimeStr(String &s, tm *timeInfo)
+{
+	char buf[48] = {};
+	_strftime(buf, sizeof(buf), TIME_FORMAT, timeInfo);
 	s = buf;
 
 	// remove double spaces. %e will add an extra space, ie. " 1" instead of "1"
@@ -130,4 +124,112 @@ void disableBuiltinLED()
 	gpio_hold_en(static_cast<gpio_num_t>(LED_BUILTIN));
 	gpio_deep_sleep_hold_en();
 	return;
+}
+
+// Perform an HTTP GET request to ical server
+// Returns the HTTP Status Code.
+int getCalendar(WiFiClient &client, time_t *last_updated, CalendarEntries *calendarEntries)
+{
+	int attempts = 0;
+	bool rxSuccess = false;
+
+	int httpResponse = 0;
+	while (!rxSuccess && attempts < 3)
+	{
+		wl_status_t connection_status = WiFi.status();
+		if (connection_status != WL_CONNECTED)
+		{
+			// -512 offset distinguishes these errors from httpClient errors
+			return -512 - static_cast<int>(connection_status);
+		}
+
+		HTTPClient http;
+		http.setConnectTimeout(HTTP_CLIENT_TCP_TIMEOUT); // default 10s
+		http.setTimeout(HTTP_CLIENT_TCP_TIMEOUT);		 // default 10s
+		http.addHeader(String("Content-Type"), String("application/protobuf"));
+
+		http.begin(client, String("192.168.0.32"), 8080, String("/calendar"));
+		httpResponse = http.GET();
+		Serial.println("HTTP Response: " + String(httpResponse, DEC));
+
+		if (httpResponse == HTTP_CODE_OK)
+		{
+			decodeCalendarResponse(http, last_updated, calendarEntries);
+			rxSuccess = true;
+		}
+
+		client.stop();
+		http.end();
+		++attempts;
+	}
+
+	return httpResponse;
+}
+
+bool decodeCalendarResponse(HTTPClient &client, time_t *last_updated, CalendarEntries *calendarEntries)
+{
+	JsonDocument doc;
+	DeserializationError error = deserializeJson(doc, client.getStream());
+
+#if DEBUG_LEVEL >= 1
+	Serial.println("[debug] doc.overflowed() : " + String(doc.overflowed()));
+#endif
+#if DEBUG_LEVEL >= 2
+	serializeJsonPretty(doc, Serial);
+#endif
+
+	if (error)
+	{
+		return false;
+	}
+
+	*last_updated = doc["last_updated"].as<time_t>();
+	Serial.printf("[debug] lastUpdated: %ld\n", *last_updated);
+
+	_CalendarEntry calEntry;
+	for (JsonObject entry : doc["entries"].as<JsonArray>())
+	{
+		if (entry.containsKey("title"))
+		{
+			calEntry.title = String(entry["title"].as<const char *>());
+		}
+
+		if (entry.containsKey("message"))
+		{
+			calEntry.message = String(entry["message"].as<const char *>());
+		}
+
+		if (entry.containsKey("start"))
+		{
+			calEntry.start = entry["start"].as<time_t>();
+		}
+
+		if (entry.containsKey("end"))
+		{
+			calEntry.end = entry["end"].as<time_t>();
+		}
+
+		if (entry.containsKey("all_day"))
+		{
+			calEntry.all_day = entry["all_day"].as<bool>();
+		}
+
+		if (entry.containsKey("busy"))
+		{
+			calEntry.busy = entry["busy"].as<BusyState>();
+		}
+
+		if (entry.containsKey("important"))
+		{
+			calEntry.important = entry["important"].as<bool>();
+		}
+		else
+		{
+			calEntry.important = false;
+		}
+
+		calendarEntries->push_back(calEntry);
+	}
+
+	return true;
 }

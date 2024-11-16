@@ -23,3 +23,4 @@ wl_status_t startWiFi();
 void killWiFi();
 bool waitForSNTPSync(tm *timeInfo);
 bool printLocalTime(tm *timeInfo);
+void printHeapUsage();

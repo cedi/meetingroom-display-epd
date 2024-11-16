@@ -32,7 +32,7 @@ public:
 
     virtual void render() const override;
 
-    const static int StatusBarHeight = 25;
+    const static int StatusBarHeight = 24;
 };
 
 class BatteryPercentage : public StatusBarComponent

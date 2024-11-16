@@ -41,7 +41,7 @@
 //   -1   Connection Refused
 //   -11  Read Timeout
 //   -258 Deserialization Incomplete Input
-#define HTTP_CLIENT_TCP_TIMEOUT 10000 // ms
+#define HTTP_CLIENT_TCP_TIMEOUT 1000 // ms
 
 // TIME
 // For list of time zones see

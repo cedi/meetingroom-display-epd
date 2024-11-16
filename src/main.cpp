@@ -19,6 +19,7 @@
 #include <Preferences.h>
 #include <time.h>
 #include <WiFi.h>
+#include <WiFiClient.h>
 #include <Wire.h>
 #include <ctime>
 
@@ -32,6 +33,7 @@
 #include "icons/196x196/biological_hazard_symbol.h"
 #include "icons/196x196/battery_alert_90deg.h"
 #include "icons/196x196/warning_icon.h"
+#include "icons/196x196/wi_time_2.h" // TODO: Use 128x128
 
 #include "display.h"
 
@@ -229,17 +231,57 @@ void setup()
 		beginDeepSleep(startTime, &timeInfo);
 	}
 
+	prefs.begin(NVS_NAMESPACE, false);
+	prefs.putLong("unixTimeNTP", mktime(&timeInfo));
+
+
+	WiFiClient client;
+	time_t last_updated;
+	CalendarEntries calendar;
+
+	// get the calendar info
+	getCalendar(client, &last_updated, &calendar);
+
+	// get the lastRefreshTime from the server response (when was the)
+	// calendar updated...
+	timeInfo = *localtime(&last_updated);
 	String refreshTimeStr;
 	getRefreshTimeStr(refreshTimeStr, timeConfigured, &timeInfo);
-	String dateStr;
-	getDateStr(dateStr, &timeInfo);
 
-	prefs.begin(NVS_NAMESPACE, false);
+	// save the refreshTime in nvs
 	prefs.putString("refreshTimeStr", refreshTimeStr);
-	prefs.putString("dateStr", dateStr);
 	prefs.end();
 
-	epd.setStatus("Wichtiges Meeting", true, warning_icon);
+	epd.setCalendar(calendar);
+
+	std::vector<CalendarEntry>::iterator currentEvent = epd.getCalendar()->getCurrentEvent();
+
+	bool important = false;
+	String status = "Frei";
+	const unsigned char *icon = NULL;
+
+	if (currentEvent != epd.getCalendar()->last() ) {
+		if (currentEvent->entry.busy == Busy)
+		{
+			icon = wi_time_2;
+		}
+
+		if (currentEvent->entry.important)
+		{
+			icon = warning_icon;
+			important = true;
+		}
+
+		if (currentEvent->entry.message != "") {
+			epd.setStatus(currentEvent->entry.message, false);
+		}
+		else
+		{
+			epd.setStatus(currentEvent->entry.title, false);
+		}
+	}
+
+	epd.setStatus(status, important, icon);
 
 	epd.init();
 	epd.render();

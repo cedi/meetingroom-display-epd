@@ -2,25 +2,21 @@
 
 #include <vector>
 #include "components.h"
+#include "display_utils.h"
 
 class CalendarEntry
 {
 protected:
     DisplayBuffer *buffer;
-    bool pastEvent;
 
 public:
+    _CalendarEntry entry;
     const int width;
     const int height;
 
 public:
-    CalendarEntry(DisplayBuffer *buffer, int width)
-        : CalendarEntry(buffer, width, false)
-    {
-    }
-
-    CalendarEntry(DisplayBuffer *buffer, int width, bool pastEvent)
-        : buffer(buffer), pastEvent(pastEvent), width(width), height(48)
+    CalendarEntry(DisplayBuffer *buffer, int width, _CalendarEntry entry)
+        : buffer(buffer), entry(entry), width(width), height(48)
     {
     }
 
@@ -30,10 +26,14 @@ public:
 class Calendar : public DisplayComponent
 {
 private:
-    std::vector<CalendarEntry*> events;
+    std::vector<CalendarEntry> events;
 
 public:
     Calendar(DisplayBuffer *buffer);
 
+    void addEvent(const _CalendarEntry& entry) { events.push_back(CalendarEntry(buffer, width, entry)); }
     virtual void render() const override;
+
+    std::vector<CalendarEntry>::iterator getCurrentEvent();
+    std::vector<CalendarEntry>::iterator last() { return events.end(); }
 };

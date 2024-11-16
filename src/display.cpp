@@ -58,9 +58,12 @@ void Display::setStatus(String message, bool isImportant, const uint8_t *icon)
 	statusIndicator->setStatus(message);
 }
 
-void Display::setCalendar()
+void Display::setCalendar(const CalendarEntries& calendar)
 {
-	// TODO
+	for (CalendarEntries::const_iterator it = calendar.begin(); it != calendar.end(); it++)
+	{
+		this->calendar->addEvent(*it);
+	}
 }
 
 void Display::_render() const
