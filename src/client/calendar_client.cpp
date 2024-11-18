@@ -89,10 +89,12 @@ int CalendarClient::fetchCalendar()
 	return httpResponse;
 }
 
-const CalendarEntry* CalendarClient::getCurrentEvent(time_t now) const
+const CalendarEntry *CalendarClient::getCurrentEvent(time_t now) const
 {
-	for(CalendarEntries::const_iterator it = entries.begin(); it != entries.end(); it++) {
-		if (it->getStart() < now && it->getEnd() > now) {
+	for (CalendarEntries::const_iterator it = entries.begin(); it != entries.end(); it++)
+	{
+		if (it->getStart() < now && it->getEnd() > now)
+		{
 			return &(*it);
 		}
 	}
@@ -100,12 +102,14 @@ const CalendarEntry* CalendarClient::getCurrentEvent(time_t now) const
 	return NULL;
 }
 
-const CalendarEntry* CalendarClient::getNextEvent(time_t now) const
+const CalendarEntry *CalendarClient::getNextEvent(time_t now) const
 {
 	// Since we know that events are sorted, we can just return the first meeting that starts
 	// after the now
-	for(CalendarEntries::const_iterator it = entries.begin(); it != entries.end(); it++) {
-		if (it->getStart() > now) {
+	for (CalendarEntries::const_iterator it = entries.begin(); it != entries.end(); it++)
+	{
+		if (it->getStart() > now)
+		{
 			return &(*it);
 		}
 	}

@@ -7,8 +7,7 @@
 
 #include "config.h"
 
-Display::Display(int8_t pin_epd_pwr, int8_t pin_epd_sck, int8_t pin_epd_miso, int8_t pin_epd_mosi, int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy, calendar_client::CalendarClient *
-calClient)
+Display::Display(int8_t pin_epd_pwr, int8_t pin_epd_sck, int8_t pin_epd_miso, int8_t pin_epd_mosi, int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy, calendar_client::CalendarClient *calClient)
 	: display(GxEPD2_750_T7(pin_epd_cs, pin_epd_dc, pin_epd_rst, pin_epd_busy)),
 	  pin_epd_pwr(pin_epd_pwr),
 	  pin_epd_sck(pin_epd_sck),

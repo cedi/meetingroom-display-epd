@@ -69,7 +69,7 @@ public:
 	TextSize *getStringBounds(int16_t x, int16_t y, const String &text);
 	TextSize *getStringBounds(const String &text) { return getStringBounds(0, 0, text); }
 	TextSize *getStringBounds(int16_t x, int16_t y, const String &text, uint16_t max_width, uint16_t max_lines);
-	TextSize *getStringBounds(const String &text, uint16_t max_width, uint16_t max_lines) { return getStringBounds(0, 0, text, max_width, max_lines);}
+	TextSize *getStringBounds(const String &text, uint16_t max_width, uint16_t max_lines) { return getStringBounds(0, 0, text, max_width, max_lines); }
 
 	void drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[], int16_t width, int16_t height);
 	void drawRect(int16_t x, int16_t y, int16_t w, int16_t h) { display->drawRect(x, y, w, h, foregroundColor); }

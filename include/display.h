@@ -23,7 +23,7 @@ private:
 	StatusBar *statusBar;
 	Calendar *calendar;
 	Status *statusIndicator;
-	calendar_client::CalendarClient* calClient;
+	calendar_client::CalendarClient *calClient;
 
 	bool initialized;
 

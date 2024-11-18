@@ -35,7 +35,7 @@ StatusBar::StatusBar(DisplayBuffer *buffer, calendar_client::CalendarClient *cal
 
 void StatusBar::render(time_t now) const
 {
-	buffer->drawLine(x, y+height, x + width, y+height);
+	buffer->drawLine(x, y + height, x + width, y + height);
 
 	int xOffset = 0;
 	for (std::vector<StatusBarComponent *>::const_iterator it = leftBound.begin(); it != leftBound.end(); it++)

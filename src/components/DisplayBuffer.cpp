@@ -286,16 +286,19 @@ Rect DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t
 
 		Rect r = drawString(x, y + (current_line * line_spacing), subStr, alignment);
 
-		if (r.x < textRect.x) {
+		if (r.x < textRect.x)
+		{
 			textRect.x = r.x;
 		}
 
-		if (r.width > textRect.width) {
+		if (r.width > textRect.width)
+		{
 			textRect.width = r.width;
 		}
 
 		// the alignment made the y move upwards
-		if (r.y < textRect.y) {
+		if (r.y < textRect.y)
+		{
 			textRect.y = r.y;
 		}
 

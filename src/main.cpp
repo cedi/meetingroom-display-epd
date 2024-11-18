@@ -91,7 +91,7 @@ void beginDeepSleep(unsigned long startTime, tm *timeInfo, bool useNtpTime = fal
 		{
 			sleepMinutes = difftime(currEvent->getEnd(), now) / 60; // calculate the minutes until the event ends
 #if DEBUG_LEVEL >= 1
-				Serial.println("[debug] sleeping till end of this event: " + currEvent->getTitle() + " (" + sleepMinutes + "min)");
+			Serial.println("[debug] sleeping till end of this event: " + currEvent->getTitle() + " (" + sleepMinutes + "min)");
 #endif
 		}
 		else

@@ -34,7 +34,7 @@
 // WIFI
 #define WIFI_SSID "WiFiName"
 #define WIFI_PASSWORD "WiFiPSK"
-#define WIFI_TIMEOUT  10000 // ms, WiFi connection timeout.
+#define WIFI_TIMEOUT 10000 // ms, WiFi connection timeout.
 
 // HTTP
 // The following errors are likely the result of insuffient http client tcp timeout:
@@ -76,7 +76,7 @@
 
 // If you encounter the 'Failed To Fetch The Time' error, try increasing
 // NTP_TIMEOUT or select closer/lower latency time servers.
-#define NTP_TIMEOUT  20000 // ms
+#define NTP_TIMEOUT 20000 // ms
 
 // Sleep duration in minutes. (aka how often esp32 will wake for an update)
 // Aligned to the nearest minute boundary.
@@ -89,7 +89,7 @@
 // Bed Time Power Savings.
 // If BED_TIME == WAKE_TIME, then this battery saving feature will be disabled.
 // (range: [0-23])
-#define BED_TIME 0	 // Last update at 00:00 (midnight) until WAKE_TIME.
+#define BED_TIME 0  // Last update at 00:00 (midnight) until WAKE_TIME.
 #define WAKE_TIME 9 // Hour of first update after BED_TIME, 06:00.
 
 // Note that the minute alignment of SLEEP_DURATION begins at WAKE_TIME even if
@@ -107,29 +107,29 @@
 // minutes). Once the battery voltage has fallen to CRIT_LOW_BATTERY_VOLTAGE,
 // the esp32 will hibernate and a manual press of the reset (RST) button to
 // begin operating again.
-#define WARN_BATTERY_VOLTAGE 3535				   // (millivolts) ~20%
-#define LOW_BATTERY_VOLTAGE 3462				   // (millivolts) ~10%
-#define VERY_LOW_BATTERY_VOLTAGE 3442			   // (millivolts)  ~8%
-#define CRIT_LOW_BATTERY_VOLTAGE 3404			   // (millivolts)  ~5%
-#define LOW_BATTERY_SLEEP_INTERVAL  30	   // (minutes)
-#define VERY_LOW_BATTERY_SLEEP_INTERVAL  120 // (minutes)
+#define WARN_BATTERY_VOLTAGE 3535           // (millivolts) ~20%
+#define LOW_BATTERY_VOLTAGE 3462            // (millivolts) ~10%
+#define VERY_LOW_BATTERY_VOLTAGE 3442       // (millivolts)  ~8%
+#define CRIT_LOW_BATTERY_VOLTAGE 3404       // (millivolts)  ~5%
+#define LOW_BATTERY_SLEEP_INTERVAL 30       // (minutes)
+#define VERY_LOW_BATTERY_SLEEP_INTERVAL 120 // (minutes)
 
 // Battery voltage calculations are based on a typical 3.7v LiPo.
 #define MAX_BATTERY_VOLTAGE 4200 // (millivolts)
 #define MIN_BATTERY_VOLTAGE 3000 // (millivolts)
 
 // HTTP CLIENT ERRORS
-#define TXT_HTTPC_ERROR_CONNECTION_REFUSED   "Connection Refused";
-#define TXT_HTTPC_ERROR_SEND_HEADER_FAILED   "Send Header Failed";
-#define TXT_HTTPC_ERROR_SEND_PAYLOAD_FAILED  "Send Payload Failed";
-#define TXT_HTTPC_ERROR_NOT_CONNECTED        "Not Connected";
-#define TXT_HTTPC_ERROR_CONNECTION_LOST      "Connection Lost";
-#define TXT_HTTPC_ERROR_NO_STREAM            "No Stream";
-#define TXT_HTTPC_ERROR_NO_HTTP_SERVER       "No HTTP Server";
-#define TXT_HTTPC_ERROR_TOO_LESS_RAM         "Too Less Ram";
-#define TXT_HTTPC_ERROR_ENCODING             "Transfer-Encoding Not Supported";
-#define TXT_HTTPC_ERROR_STREAM_WRITE         "Stream Write Error";
-#define TXT_HTTPC_ERROR_READ_TIMEOUT         "Read Timeout";
+#define TXT_HTTPC_ERROR_CONNECTION_REFUSED "Connection Refused";
+#define TXT_HTTPC_ERROR_SEND_HEADER_FAILED "Send Header Failed";
+#define TXT_HTTPC_ERROR_SEND_PAYLOAD_FAILED "Send Payload Failed";
+#define TXT_HTTPC_ERROR_NOT_CONNECTED "Not Connected";
+#define TXT_HTTPC_ERROR_CONNECTION_LOST "Connection Lost";
+#define TXT_HTTPC_ERROR_NO_STREAM "No Stream";
+#define TXT_HTTPC_ERROR_NO_HTTP_SERVER "No HTTP Server";
+#define TXT_HTTPC_ERROR_TOO_LESS_RAM "Too Less Ram";
+#define TXT_HTTPC_ERROR_ENCODING "Transfer-Encoding Not Supported";
+#define TXT_HTTPC_ERROR_STREAM_WRITE "Stream Write Error";
+#define TXT_HTTPC_ERROR_READ_TIMEOUT "Read Timeout";
 
 // HTTP RESPONSE STATUS CODES
 // 1xx - Informational Responses
@@ -201,19 +201,19 @@
 #define TXT_HTTP_RESPONSE_511 "Network Authentication Required";
 
 // ARDUINOJSON DESERIALIZATION ERROR CODES
-#define TXT_DESERIALIZATION_ERROR_OK               "Deserialization OK";
-#define TXT_DESERIALIZATION_ERROR_EMPTY_INPUT      "Deserialization Empty Input";
+#define TXT_DESERIALIZATION_ERROR_OK "Deserialization OK";
+#define TXT_DESERIALIZATION_ERROR_EMPTY_INPUT "Deserialization Empty Input";
 #define TXT_DESERIALIZATION_ERROR_INCOMPLETE_INPUT "Deserialization Incomplete Input";
-#define TXT_DESERIALIZATION_ERROR_INVALID_INPUT    "Deserialization Invalid Input";
-#define TXT_DESERIALIZATION_ERROR_NO_MEMORY        "Deserialization No Memory";
-#define TXT_DESERIALIZATION_ERROR_TOO_DEEP         "Deserialization Too Deep";
+#define TXT_DESERIALIZATION_ERROR_INVALID_INPUT "Deserialization Invalid Input";
+#define TXT_DESERIALIZATION_ERROR_NO_MEMORY "Deserialization No Memory";
+#define TXT_DESERIALIZATION_ERROR_TOO_DEEP "Deserialization Too Deep";
 
 // WIFI STATUS
-#define TXT_WL_NO_SHIELD       "No Shield";
-#define TXT_WL_IDLE_STATUS     "Idle";
-#define TXT_WL_NO_SSID_AVAIL   "No SSID Available";
-#define TXT_WL_SCAN_COMPLETED  "Scan Complete";
-#define TXT_WL_CONNECTED       "Connected";
-#define TXT_WL_CONNECT_FAILED  "Connection Failed";
+#define TXT_WL_NO_SHIELD "No Shield";
+#define TXT_WL_IDLE_STATUS "Idle";
+#define TXT_WL_NO_SSID_AVAIL "No SSID Available";
+#define TXT_WL_SCAN_COMPLETED "Scan Complete";
+#define TXT_WL_CONNECTED "Connected";
+#define TXT_WL_CONNECT_FAILED "Connection Failed";
 #define TXT_WL_CONNECTION_LOST "Connection Lost";
-#define TXT_WL_DISCONNECTED    "Disconnected";
+#define TXT_WL_DISCONNECTED "Disconnected";

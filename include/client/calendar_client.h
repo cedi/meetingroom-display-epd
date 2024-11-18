@@ -54,8 +54,8 @@ namespace calendar_client
         CalendarClient(String apiEndpoint, int apiPort) : apiEndpoint(apiEndpoint), apiPort(apiPort) {}
         int fetchCalendar();
 
-        const CalendarEntry* getCurrentEvent(time_t now) const;
-        const CalendarEntry* getNextEvent(time_t now) const;
+        const CalendarEntry *getCurrentEvent(time_t now) const;
+        const CalendarEntry *getNextEvent(time_t now) const;
 
         time_t getLastUpdated() const { return last_updated; }
         const CalendarEntries *getCalendarEntries() const { return &entries; }
