@@ -1,25 +1,30 @@
 #include "display.h"
+
 #include "components/statusbar.h"
 #include "components/calendar.h"
 #include "components/status.h"
 #include "fonts/Poppins_Regular.h"
 
-Display::Display(int8_t pin_epd_pwr, int8_t pin_epd_sck, int8_t pin_epd_miso, int8_t pin_epd_mosi, int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy)
+#include "config.h"
+
+Display::Display(int8_t pin_epd_pwr, int8_t pin_epd_sck, int8_t pin_epd_miso, int8_t pin_epd_mosi, int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy, calendar_client::CalendarClient *
+calClient)
 	: display(GxEPD2_750_T7(pin_epd_cs, pin_epd_dc, pin_epd_rst, pin_epd_busy)),
 	  pin_epd_pwr(pin_epd_pwr),
 	  pin_epd_sck(pin_epd_sck),
 	  pin_epd_miso(pin_epd_miso),
 	  pin_epd_mosi(pin_epd_mosi),
 	  pin_epd_cs(pin_epd_cs),
+	  calClient(calClient),
 	  initialized(false)
 {
 	// initialize power pin as output pin
 	pinMode(pin_epd_pwr, OUTPUT);
 	buffer = new DisplayBuffer(&display);
 
-	statusBar = new StatusBar(buffer);
-	calendar = new Calendar(buffer);
-	statusIndicator = new Status(buffer);
+	statusBar = new StatusBar(buffer, calClient);
+	calendar = new Calendar(buffer, calClient);
+	statusIndicator = new Status(buffer, calClient);
 }
 
 void Display::init()
@@ -51,26 +56,11 @@ void Display::powerOff()
 	initialized = false;
 }
 
-void Display::setStatus(String message, bool isImportant, const uint8_t *icon)
+void Display::_render(time_t now) const
 {
-	statusIndicator->setImportant(isImportant);
-	statusIndicator->setIcon(icon);
-	statusIndicator->setStatus(message);
-}
-
-void Display::setCalendar(const CalendarEntries& calendar)
-{
-	for (CalendarEntries::const_iterator it = calendar.begin(); it != calendar.end(); it++)
-	{
-		this->calendar->addEvent(*it);
-	}
-}
-
-void Display::_render() const
-{
-	statusBar->render();
-	calendar->render();
-	statusIndicator->render();
+	statusBar->render(now);
+	calendar->render(now);
+	statusIndicator->render(now);
 
 	buffer->drawLine(buffer->width() / 2, StatusBar::StatusBarHeight, buffer->width() / 2, buffer->height());
 }

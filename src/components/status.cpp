@@ -1,16 +1,49 @@
 #include "components/status.h"
 #include "components/statusbar.h"
 #include "config.h"
+
+#include "icons/196x196/warning_icon.h"
+#include "icons/196x196/wi_time_2.h" // TODO: Use 128x128
 #include "fonts/Poppins_Regular.h"
 
-Status::Status(DisplayBuffer *buffer)
-	: DisplayComponent(buffer, 0, StatusBar::StatusBarHeight, buffer->width() / 2, buffer->height() - StatusBar::StatusBarHeight), isImportant(false), icon(NULL)
+Status::Status(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient)
+	: DisplayComponent(buffer, 0, StatusBar::StatusBarHeight, buffer->width() / 2, buffer->height() - StatusBar::StatusBarHeight),
+	  calClient(calClient)
 {
 }
 
-void Status::render() const
+void Status::render(time_t now) const
 {
 	int maxTextWidth = width;
+
+	const calendar_client::CalendarEntry *currentEvent = calClient->getCurrentEvent(now);
+
+	bool isImportant = false;
+	String statusMsg = "Frei";
+	const unsigned char *icon = NULL;
+	int iconSize = 0;
+
+	if (currentEvent != NULL)
+	{
+
+#if DEBUG_LEVEL >= 1
+		Serial.printf("Current Event: %s, busy: %d (isBusy: %d)", currentEvent->getTitle().c_str(), currentEvent->getBusy(), calendar_client::Busy);
+#endif
+		if (currentEvent->getBusy() == calendar_client::Busy)
+		{
+			icon = wi_time_2;
+			iconSize = 196;
+		}
+
+		if (currentEvent->isImportant())
+		{
+			icon = warning_icon;
+			iconSize = 196;
+			isImportant = true;
+		}
+
+		statusMsg = currentEvent->getMessage() != "" ? currentEvent->getMessage() : currentEvent->getTitle();
+	}
 
 	if (isImportant)
 	{
@@ -33,15 +66,15 @@ void Status::render() const
 
 	if (icon != NULL)
 	{
-		startX -= 196 / 2;
-		startY -= 196 / 2;
-		buffer->drawBitmap(startX, startY, icon, 196, 196);
+		startX -= iconSize / 2;
+		startY -= iconSize / 2;
+		buffer->drawBitmap(startX, startY - 10, icon, iconSize, iconSize);
 
-		startX += 196 / 2;
-		startY += 196 - 40;
+		startX += iconSize / 2;
+		startY += iconSize;
 
-		alignment = Alignment::HorizontalCenter | Alignment::Top;
+		alignment = Alignment::HorizontalCenter | Alignment::Bottom;
 	}
 
-	buffer->drawString(startX, startY, statusMsg, alignment, maxTextWidth, 3);
+	buffer->drawString(startX, startY + 10, statusMsg, alignment, maxTextWidth, 3);
 }

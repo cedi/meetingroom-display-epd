@@ -7,7 +7,7 @@ class IDisplayComponent
 {
 public:
     virtual ~IDisplayComponent() = default;
-    virtual void render() const = 0;
+    virtual void render(time_t now) const = 0;
 };
 
 class DisplayComponent : public IDisplayComponent
@@ -25,5 +25,5 @@ public:
     {
     }
 
-    virtual void render() const override;
+    virtual void render(time_t now) const override;
 };

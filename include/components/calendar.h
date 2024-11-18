@@ -3,37 +3,19 @@
 #include <vector>
 #include "components.h"
 #include "display_utils.h"
-
-class CalendarEntry
-{
-protected:
-    DisplayBuffer *buffer;
-
-public:
-    _CalendarEntry entry;
-    const int width;
-    const int height;
-
-public:
-    CalendarEntry(DisplayBuffer *buffer, int width, _CalendarEntry entry)
-        : buffer(buffer), entry(entry), width(width), height(48)
-    {
-    }
-
-    virtual void render(int x, int y) const;
-};
+#include "client/calendar_client.h"
 
 class Calendar : public DisplayComponent
 {
 private:
-    std::vector<CalendarEntry> events;
+    calendar_client::CalendarClient *calClient;
+    const int entryHeight;
 
 public:
-    Calendar(DisplayBuffer *buffer);
+    Calendar(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient);
 
-    void addEvent(const _CalendarEntry& entry) { events.push_back(CalendarEntry(buffer, width, entry)); }
-    virtual void render() const override;
+    virtual void render(time_t now) const override;
 
-    std::vector<CalendarEntry>::iterator getCurrentEvent();
-    std::vector<CalendarEntry>::iterator last() { return events.end(); }
+protected:
+    virtual void renderCalendarEntry(int x, int y, const calendar_client::CalendarEntry &entry, time_t now) const;
 };

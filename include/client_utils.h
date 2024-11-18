@@ -21,6 +21,6 @@
 
 wl_status_t startWiFi();
 void killWiFi();
-bool waitForSNTPSync(tm *timeInfo);
+bool getNtpTime(tm *timeInfo);
 bool printLocalTime(tm *timeInfo);
 void printHeapUsage();

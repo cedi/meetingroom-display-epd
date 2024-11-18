@@ -26,18 +26,19 @@
 #include "config.h"
 #include "display_utils.h"
 #include "client_utils.h"
+#include "client/calendar_client.h"
 
 #include "icons/196x196/wifi.h"
 #include "icons/196x196/wifi_x.h"
 #include "icons/196x196/wi_time_4.h"
 #include "icons/196x196/biological_hazard_symbol.h"
 #include "icons/196x196/battery_alert_90deg.h"
-#include "icons/196x196/warning_icon.h"
-#include "icons/196x196/wi_time_2.h" // TODO: Use 128x128
+#include "icons/196x196/wi_cloud_down.h"
 
 #include "display.h"
 
 Preferences prefs;
+calendar_client::CalendarClient calClient("192.168.0.32", 8080);
 Display epd(PIN_EPD_PWR,
 			PIN_EPD_SCK,
 			PIN_EPD_MISO,
@@ -45,16 +46,21 @@ Display epd(PIN_EPD_PWR,
 			PIN_EPD_CS,
 			PIN_EPD_DC,
 			PIN_EPD_RST,
-			PIN_EPD_BUSY);
+			PIN_EPD_BUSY,
+			&calClient);
 
 /* Put esp32 into ultra low-power deep sleep (<11μA).
  * Aligns wake time to the minute. Sleep times defined in config.cpp.
  */
-void beginDeepSleep(unsigned long startTime, tm *timeInfo)
+void beginDeepSleep(unsigned long startTime, tm *timeInfo, bool useNtpTime = false, bool calendarFetched = false)
 {
-	if (!getLocalTime(timeInfo))
+	// only call getLocalTime if we havent gotten the ntp time yet
+	if (!useNtpTime)
 	{
-		Serial.println("Failed to synchronize time before deep-sleep, referencing older time.");
+		if (!getLocalTime(timeInfo))
+		{
+			Serial.println("Failed to synchronize time before deep-sleep, referencing older time.");
+		}
 	}
 
 	// To simplify sleep time calculations, the current time stored by timeInfo
@@ -72,19 +78,33 @@ void beginDeepSleep(unsigned long startTime, tm *timeInfo)
 	// time is relative to wake time
 	int curHour = (timeInfo->tm_hour - WAKE_TIME + 24) % 24;
 	const int curMinute = curHour * 60 + timeInfo->tm_min;
-	const int curSecond = curHour * 3600 + timeInfo->tm_min * 60 + timeInfo->tm_sec;
-	const int desiredSleepSeconds = SLEEP_DURATION * 60;
-	const int offsetMinutes = curMinute % SLEEP_DURATION;
-	const int offsetSeconds = curSecond % desiredSleepSeconds;
 
-	// align wake time to nearest multiple of SLEEP_DURATION
-	int sleepMinutes = SLEEP_DURATION - offsetMinutes;
+	int sleepMinutes = SLEEP_DURATION;
 
-	// if we have a sleep time less than 2 minutes OR less 5% SLEEP_DURATION,
-	// skip to next alignment
-	if (offsetSeconds < 120 || offsetSeconds / (float)desiredSleepSeconds > 0.95f)
+	// Sleep duration is until the end of this meeting, or till the beginning of the next meeting
+	if (calendarFetched)
 	{
-		sleepMinutes += SLEEP_DURATION;
+		time_t now = mktime(timeInfo);
+		const calendar_client::CalendarEntry *currEvent = calClient.getCurrentEvent(now);
+
+		if (currEvent != NULL)
+		{
+			sleepMinutes = difftime(currEvent->getEnd(), now) / 60; // calculate the minutes until the event ends
+#if DEBUG_LEVEL >= 1
+				Serial.println("[debug] sleeping till end of this event: " + currEvent->getTitle() + " (" + sleepMinutes + "min)");
+#endif
+		}
+		else
+		{
+			const calendar_client::CalendarEntry *nextEvent = calClient.getNextEvent(now);
+			if (nextEvent != NULL)
+			{
+				sleepMinutes = std::ceil(difftime(nextEvent->getStart(), now) / 60.0); // calculate the minutes until the next event starts
+#if DEBUG_LEVEL >= 1
+				Serial.println("[debug] sleeping till start of next event: " + nextEvent->getTitle() + " (" + sleepMinutes + "min)");
+#endif
+			}
+		}
 	}
 
 	// estimated wake time, if this falls in a sleep period then sleepDuration
@@ -109,8 +129,8 @@ void beginDeepSleep(unsigned long startTime, tm *timeInfo)
 	printHeapUsage();
 #endif
 
-	Serial.print("Awake for " + String((millis() - startTime) / 1000.0, 3) + "s");
-	Serial.print("Entering deep sleep for " + String(sleepDuration) + "s");
+	Serial.println("Awake for " + String((millis() - startTime) / 1000.0, 3) + "s");
+	Serial.println("Entering deep sleep for " + String(sleepDuration) + "s");
 	esp_sleep_enable_timer_wakeup(sleepDuration * 1000000ULL);
 
 	esp_deep_sleep_start();
@@ -218,7 +238,7 @@ void setup()
 
 	// TIME SYNCHRONIZATION
 	configTzTime(TIMEZONE, NTP_SERVER_1, NTP_SERVER_2);
-	bool timeConfigured = waitForSNTPSync(&timeInfo);
+	bool timeConfigured = getNtpTime(&timeInfo);
 	if (!timeConfigured)
 	{
 		killWiFi();
@@ -231,64 +251,26 @@ void setup()
 		beginDeepSleep(startTime, &timeInfo);
 	}
 
-	prefs.begin(NVS_NAMESPACE, false);
-	prefs.putLong("unixTimeNTP", mktime(&timeInfo));
+	int httpStatus = calClient.fetchCalendar();
+	if (httpStatus != HTTP_CODE_OK)
+	{
+		killWiFi();
 
+		Serial.printf("Fetching calendar failed. %d: %s", httpStatus, calendar_client::CalendarClient::getHttpResponsePhrase(httpStatus));
 
-	WiFiClient client;
-	time_t last_updated;
-	CalendarEntries calendar;
+		epd.init();
+		epd.error(wi_cloud_down, statusStr);
+		epd.powerOff();
 
-	// get the calendar info
-	getCalendar(client, &last_updated, &calendar);
-
-	// get the lastRefreshTime from the server response (when was the)
-	// calendar updated...
-	timeInfo = *localtime(&last_updated);
-	String refreshTimeStr;
-	getRefreshTimeStr(refreshTimeStr, timeConfigured, &timeInfo);
-
-	// save the refreshTime in nvs
-	prefs.putString("refreshTimeStr", refreshTimeStr);
-	prefs.end();
-
-	epd.setCalendar(calendar);
-
-	std::vector<CalendarEntry>::iterator currentEvent = epd.getCalendar()->getCurrentEvent();
-
-	bool important = false;
-	String status = "Frei";
-	const unsigned char *icon = NULL;
-
-	if (currentEvent != epd.getCalendar()->last() ) {
-		if (currentEvent->entry.busy == Busy)
-		{
-			icon = wi_time_2;
-		}
-
-		if (currentEvent->entry.important)
-		{
-			icon = warning_icon;
-			important = true;
-		}
-
-		if (currentEvent->entry.message != "") {
-			epd.setStatus(currentEvent->entry.message, false);
-		}
-		else
-		{
-			epd.setStatus(currentEvent->entry.title, false);
-		}
+		beginDeepSleep(startTime, &timeInfo, true);
 	}
 
-	epd.setStatus(status, important, icon);
-
 	epd.init();
-	epd.render();
+	epd.render(mktime(&timeInfo));
 	epd.powerOff();
 
 	// DEEP SLEEP
-	beginDeepSleep(startTime, &timeInfo);
+	beginDeepSleep(startTime, &timeInfo, true, true);
 } // end setup
 
 // This will never run

@@ -72,7 +72,7 @@ uint32_t calcBatPercent(uint32_t v, uint32_t minv, uint32_t maxv)
 	// normal
 	uint32_t p = 105 - (105 / (1 + pow(1.724 * (v - minv) / (maxv - minv), 5.5)));
 	return p >= 100 ? 100 : p;
-} // end calcBatPercent
+}
 
 // Gets string with the current date.
 void getDateStr(String &s, tm *timeInfo)
@@ -124,112 +124,4 @@ void disableBuiltinLED()
 	gpio_hold_en(static_cast<gpio_num_t>(LED_BUILTIN));
 	gpio_deep_sleep_hold_en();
 	return;
-}
-
-// Perform an HTTP GET request to ical server
-// Returns the HTTP Status Code.
-int getCalendar(WiFiClient &client, time_t *last_updated, CalendarEntries *calendarEntries)
-{
-	int attempts = 0;
-	bool rxSuccess = false;
-
-	int httpResponse = 0;
-	while (!rxSuccess && attempts < 3)
-	{
-		wl_status_t connection_status = WiFi.status();
-		if (connection_status != WL_CONNECTED)
-		{
-			// -512 offset distinguishes these errors from httpClient errors
-			return -512 - static_cast<int>(connection_status);
-		}
-
-		HTTPClient http;
-		http.setConnectTimeout(HTTP_CLIENT_TCP_TIMEOUT); // default 10s
-		http.setTimeout(HTTP_CLIENT_TCP_TIMEOUT);		 // default 10s
-		http.addHeader(String("Content-Type"), String("application/protobuf"));
-
-		http.begin(client, String("192.168.0.32"), 8080, String("/calendar"));
-		httpResponse = http.GET();
-		Serial.println("HTTP Response: " + String(httpResponse, DEC));
-
-		if (httpResponse == HTTP_CODE_OK)
-		{
-			decodeCalendarResponse(http, last_updated, calendarEntries);
-			rxSuccess = true;
-		}
-
-		client.stop();
-		http.end();
-		++attempts;
-	}
-
-	return httpResponse;
-}
-
-bool decodeCalendarResponse(HTTPClient &client, time_t *last_updated, CalendarEntries *calendarEntries)
-{
-	JsonDocument doc;
-	DeserializationError error = deserializeJson(doc, client.getStream());
-
-#if DEBUG_LEVEL >= 1
-	Serial.println("[debug] doc.overflowed() : " + String(doc.overflowed()));
-#endif
-#if DEBUG_LEVEL >= 2
-	serializeJsonPretty(doc, Serial);
-#endif
-
-	if (error)
-	{
-		return false;
-	}
-
-	*last_updated = doc["last_updated"].as<time_t>();
-	Serial.printf("[debug] lastUpdated: %ld\n", *last_updated);
-
-	_CalendarEntry calEntry;
-	for (JsonObject entry : doc["entries"].as<JsonArray>())
-	{
-		if (entry.containsKey("title"))
-		{
-			calEntry.title = String(entry["title"].as<const char *>());
-		}
-
-		if (entry.containsKey("message"))
-		{
-			calEntry.message = String(entry["message"].as<const char *>());
-		}
-
-		if (entry.containsKey("start"))
-		{
-			calEntry.start = entry["start"].as<time_t>();
-		}
-
-		if (entry.containsKey("end"))
-		{
-			calEntry.end = entry["end"].as<time_t>();
-		}
-
-		if (entry.containsKey("all_day"))
-		{
-			calEntry.all_day = entry["all_day"].as<bool>();
-		}
-
-		if (entry.containsKey("busy"))
-		{
-			calEntry.busy = entry["busy"].as<BusyState>();
-		}
-
-		if (entry.containsKey("important"))
-		{
-			calEntry.important = entry["important"].as<bool>();
-		}
-		else
-		{
-			calEntry.important = false;
-		}
-
-		calendarEntries->push_back(calEntry);
-	}
-
-	return true;
 }

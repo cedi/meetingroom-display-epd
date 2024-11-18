@@ -105,7 +105,7 @@ bool printLocalTime(tm *timeInfo)
  *
  * Note: Must be connected to WiFi to get time from NTP server.
  */
-bool waitForSNTPSync(tm *timeInfo)
+bool getNtpTime(tm *timeInfo)
 {
 	// Wait for SNTP synchronization to complete
 	unsigned long timeout = millis() + NTP_TIMEOUT;
@@ -121,7 +121,7 @@ bool waitForSNTPSync(tm *timeInfo)
 		Serial.println();
 	}
 	return printLocalTime(timeInfo);
-} // waitForSNTPSync
+}
 
 /* Prints debug information about heap usage.
  */

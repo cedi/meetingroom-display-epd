@@ -7,6 +7,7 @@
 #include "components/status.h"
 #include "components/calendar.h"
 #include "display_utils.h"
+#include "client/calendar_client.h"
 
 class Display
 {
@@ -22,12 +23,13 @@ private:
 	StatusBar *statusBar;
 	Calendar *calendar;
 	Status *statusIndicator;
+	calendar_client::CalendarClient* calClient;
 
 	bool initialized;
 
 	// working with the display
 public:
-	Display(int8_t pin_epd_pwr, int8_t pin_epd_sck, int8_t pin_epd_miso, int8_t pin_epd_mosi, int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy);
+	Display(int8_t pin_epd_pwr, int8_t pin_epd_sck, int8_t pin_epd_miso, int8_t pin_epd_mosi, int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy, calendar_client::CalendarClient *calClient);
 
 	// turn on the display and initialize it
 	void init();
@@ -40,17 +42,15 @@ public:
 	// Display configuration
 public:
 	void setStatus(String message, bool isImportant = false, const uint8_t *icon = NULL);
-	void setCalendar(const CalendarEntries& calendar);
-	Calendar *getCalendar() { return calendar; }
 
 	// Rendering functions
 public:
 	// renders the display in a single refresh cycle for the display
-	void render() const
+	void render(time_t now) const
 	{
 		do
 		{
-			_render();
+			_render(now);
 		} while (buffer->nextPage());
 	}
 
@@ -68,5 +68,5 @@ public:
 	// they draw the display, but do not take care of the nextPage. That is done in the public variants
 protected:
 	void _error(const uint8_t *bitmap_196x196, const String &title, const String &description = "") const;
-	void _render() const;
+	void _render(time_t now) const;
 };
