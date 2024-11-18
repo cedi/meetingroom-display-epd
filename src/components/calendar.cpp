@@ -23,15 +23,56 @@ void Calendar::render(time_t now) const
 {
 	int yOffset = y;
 
-#if DEBUG_LEVEL >= 2
-	Serial.printf("[verbose] calendar_entries: %d\n", calClient->getCalendarEntries()->size());
+	// If there are more calendar items than fit on the display,
+	// we need to truncate them a bit so they'll fit
+	int maxCalendarEntries = height / entryHeight;
+	int calendarEntryCount = calClient->getCalendarEntries()->size();
+	bool truncate = calendarEntryCount > maxCalendarEntries;
+	int overflowingMeetings = 0;
+
+#if DEBUG_LEVEL >= 1
+	Serial.printf("[debug] calendar_entries: %d (max: %d)\n", calendarEntryCount, maxCalendarEntries);
 #endif
 
+	int itemCntr = 0;
 	for (calendar_client::CalendarEntries::const_iterator calIt = calClient->getCalendarEntries()->begin();
 		 calIt != calClient->getCalendarEntries()->end(); calIt++)
 	{
+		// if we must truncate, lets hide the the calendar item after now
+		if (truncate && calIt->getEnd() < now)
+		{
+#if DEBUG_LEVEL >= 1
+			Serial.printf("[debug] truncating past event: %s\n", calIt->getTitle().c_str());
+#endif
+			// and re-evaluate if we still have to truncate
+			calendarEntryCount--;
+			truncate = calendarEntryCount > maxCalendarEntries;
+			continue;
+		}
+
+		if (itemCntr >= maxCalendarEntries)
+		{
+			overflowingMeetings = maxCalendarEntries - itemCntr + 2;
+#if DEBUG_LEVEL >= 1
+			Serial.printf("[debug] truncating %d future events due to no more available space on display.\n", overflowingMeetings);
+#endif
+			break;
+		}
+
 		renderCalendarEntry(x, yOffset, *calIt, now);
 		yOffset += entryHeight;
+		itemCntr++;
+	}
+
+	// If we have more meetings than we can display,
+	// at least add an indicator that there's more to come at the bottom
+	if (overflowingMeetings > 0)
+	{
+		int availableHeight = height - maxCalendarEntries * entryHeight;
+		String remainingText("+" + String(overflowingMeetings) + " events...");
+
+		buffer->setFont(&FONT_9pt8b);
+		buffer->drawString(x + width / 2, yOffset + availableHeight / 2, remainingText, Alignment::Center, width, 1);
 	}
 }
 
