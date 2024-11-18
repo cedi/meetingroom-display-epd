@@ -1,4 +1,5 @@
 {
+    "editor.formatOnSave": true,
     "files.associations": {
         "*.bicep": "bicep",
         "ctime": "cpp",
