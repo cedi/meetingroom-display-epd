@@ -35,6 +35,9 @@ StatusBar::StatusBar(DisplayBuffer *buffer, calendar_client::CalendarClient *cal
 
 void StatusBar::render(time_t now) const
 {
+	buffer->setBackgroundColor(Color::White);
+	buffer->setForegroundColor(Color::Black);
+
 	buffer->drawLine(x, y + height, x + width, y + height);
 
 	int xOffset = 0;

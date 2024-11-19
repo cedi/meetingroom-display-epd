@@ -52,46 +52,28 @@ Display epd(PIN_EPD_PWR,
 /* Put esp32 into ultra low-power deep sleep (<11μA).
  * Aligns wake time to the minute. Sleep times defined in config.cpp.
  */
-void beginDeepSleep(unsigned long startTime, tm *timeInfo, bool useNtpTime = false, bool calendarFetched = false)
+void beginDeepSleep(unsigned long startTime, tm *timeInfo, bool calendarFetched = false)
 {
 	// only call getLocalTime if we havent gotten the ntp time yet
-	if (!useNtpTime)
+	if (!getLocalTime(timeInfo))
 	{
-		if (!getLocalTime(timeInfo))
-		{
-			Serial.println("Failed to synchronize time before deep-sleep, referencing older time.");
-		}
+		Serial.println("Failed to synchronize time before deep-sleep, referencing older time.");
 	}
 
-	// To simplify sleep time calculations, the current time stored by timeInfo
-	// will be converted to time relative to the WAKE_TIME. This way if a
-	// SLEEP_DURATION is not a multiple of 60 minutes it can be more trivially,
-	// aligned and it can easily be deterimined whether we must sleep for
-	// additional time due to bedtime.
-	// i.e. when curHour == 0, then timeInfo->tm_hour == WAKE_TIME
-	int bedtimeHour = INT_MAX;
-	if (BED_TIME != WAKE_TIME)
-	{
-		bedtimeHour = (BED_TIME - WAKE_TIME + 24) % 24;
-	}
+	time_t now = mktime(timeInfo);
 
-	// time is relative to wake time
-	int curHour = (timeInfo->tm_hour - WAKE_TIME + 24) % 24;
-	const int curMinute = curHour * 60 + timeInfo->tm_min;
-
-	int sleepMinutes = SLEEP_DURATION;
+	int sleepSeconds = SLEEP_DURATION * 60; // SLEEP_DURATION is in minutes, multiply by 60
 
 	// Sleep duration is until the end of this meeting, or till the beginning of the next meeting
 	if (calendarFetched)
 	{
-		time_t now = mktime(timeInfo);
 		const calendar_client::CalendarEntry *currEvent = calClient.getCurrentEvent(now);
 
 		if (currEvent != NULL)
 		{
-			sleepMinutes = difftime(currEvent->getEnd(), now) / 60; // calculate the minutes until the event ends
+			sleepSeconds = difftime(currEvent->getEnd(), now); // calculate the minutes until the event ends
 #if DEBUG_LEVEL >= 1
-			Serial.println("[debug] sleeping till end of this event: " + currEvent->getTitle() + " (" + sleepMinutes + "min)");
+			Serial.println("[debug] sleeping till end of this event: " + currEvent->getTitle() + " (" + sleepSeconds + "s)");
 #endif
 		}
 		else
@@ -99,39 +81,31 @@ void beginDeepSleep(unsigned long startTime, tm *timeInfo, bool useNtpTime = fal
 			const calendar_client::CalendarEntry *nextEvent = calClient.getNextEvent(now);
 			if (nextEvent != NULL)
 			{
-				sleepMinutes = std::ceil(difftime(nextEvent->getStart(), now) / 60.0); // calculate the minutes until the next event starts
+				sleepSeconds = difftime(nextEvent->getStart(), now); // calculate the minutes until the next event starts
 #if DEBUG_LEVEL >= 1
-				Serial.println("[debug] sleeping till start of next event: " + nextEvent->getTitle() + " (" + sleepMinutes + "min)");
+				Serial.println("[debug] sleeping till start of next event: " + nextEvent->getTitle() + " (" + sleepSeconds + "s)");
 #endif
 			}
 		}
-	}
 
-	// estimated wake time, if this falls in a sleep period then sleepDuration
-	// must be adjusted
-	const int predictedWakeHour = ((curMinute + sleepMinutes) / 60) % 24;
-
-	uint64_t sleepDuration;
-	if (predictedWakeHour < bedtimeHour)
-	{
-		sleepDuration = sleepMinutes * 60 - timeInfo->tm_sec;
-	}
-	else
-	{
-		const int hoursUntilWake = 24 - curHour;
-		sleepDuration = hoursUntilWake * 3600ULL - (timeInfo->tm_min * 60ULL + timeInfo->tm_sec);
+		// if we sleep for more than SLEEP_DURATION, wake up a bit earlier,
+		// to check for potential new calendar invites
+		if (sleepSeconds > SLEEP_DURATION * 60)
+		{
+			sleepSeconds = SLEEP_DURATION * 60;
+		}
 	}
 
 	// add extra delay to compensate for esp32's with fast RTCs.
-	sleepDuration += 10ULL;
+	sleepSeconds += 10ULL;
 
 #if DEBUG_LEVEL >= 1
 	printHeapUsage();
 #endif
 
 	Serial.println("Awake for " + String((millis() - startTime) / 1000.0, 3) + "s");
-	Serial.println("Entering deep sleep for " + String(sleepDuration) + "s");
-	esp_sleep_enable_timer_wakeup(sleepDuration * 1000000ULL);
+	Serial.println("Entering deep sleep for " + String(sleepSeconds) + "s");
+	esp_sleep_enable_timer_wakeup(sleepSeconds * 1000000ULL);
 
 	esp_deep_sleep_start();
 }
@@ -262,7 +236,7 @@ void setup()
 		epd.error(wi_cloud_down, statusStr);
 		epd.powerOff();
 
-		beginDeepSleep(startTime, &timeInfo, true);
+		beginDeepSleep(startTime, &timeInfo);
 	}
 
 	epd.init();
@@ -270,7 +244,7 @@ void setup()
 	epd.powerOff();
 
 	// DEEP SLEEP
-	beginDeepSleep(startTime, &timeInfo, true, true);
+	beginDeepSleep(startTime, &timeInfo, true);
 } // end setup
 
 // This will never run

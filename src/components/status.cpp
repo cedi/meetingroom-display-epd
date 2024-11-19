@@ -26,8 +26,11 @@ void Status::render(time_t now) const
 	if (currentEvent != NULL)
 	{
 
-#if DEBUG_LEVEL >= 1
-		Serial.printf("Current Event: %s, busy: %d (isBusy: %d)", currentEvent->getTitle().c_str(), currentEvent->getBusy(), calendar_client::Busy);
+#if DEBUG_LEVEL >= 2
+		Serial.printf("[verbose] Current Event: %s, busy_state: %s\n",
+					  currentEvent->getTitle().c_str(),
+					  currentEvent->getBusy() == calendar_client::Busy ? "Busy" : currentEvent->getBusy() == calendar_client::Tentative ? "Tentative"
+																																		: "Free");
 #endif
 		if (currentEvent->getBusy() == calendar_client::Busy)
 		{
@@ -53,6 +56,11 @@ void Status::render(time_t now) const
 		buffer->drawRect(x + 20, y + 20, width - 40, height - 40, 10);
 
 		maxTextWidth = width - 40;
+	}
+	else
+	{
+		buffer->setBackgroundColor(Color::White);
+		buffer->setForegroundColor(Color::Black);
 	}
 
 	int startX = x + width / 2;
