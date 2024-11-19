@@ -57,25 +57,17 @@ jobs:
         run: |
           pio upgrade
 
-      - name: Get Previous tag
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get next version
-        id: next
-        uses: "WyriHaximus/github-action-next-release-version@1.0.0"
-        with:
-          version: ${{ steps.previoustag.outputs.tag }}
-
       - name: Build PlatformIO Project
         run: pio run
+
+      - name: Set outputs
+        id: commit
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Store binaries as an artifact
         uses: actions/upload-artifact@v4
         with:
-          name: firmware-esp32e-dfrobot_firebeetle2_esp32e-${{ steps.next.outputs.version }}.zip
+          name: firmware-esp32e-dfrobot_firebeetle2_esp32e-${{ steps.commit.outputs.sha_short }}.zip
           overwrite: true
           path: |
             .pio/build/*/*.bin
