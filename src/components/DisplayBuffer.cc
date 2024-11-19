@@ -1,5 +1,7 @@
 #include "components/components.h"
 
+#include "config.h"
+
 // Function to test if a specific alignment flag is set
 bool hasAlignment(uint8_t alignment, Alignment flag)
 {
@@ -32,29 +34,51 @@ Rect DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t
 
 	if (hasAlignment(alignment, Alignment::HorizontalCenter))
 	{
+#if DEBUG_LEVEL >= 3
+		Serial.printf("[verbose] drawString: hasAlignment=HorizontalCenter (oldX: %d, newX: %d)\n", x, x - size->width / 2);
+#endif
 		x -= size->width / 2;
 	}
 	else if (hasAlignment(alignment, Alignment::Right))
 	{
+#if DEBUG_LEVEL >= 3
+		Serial.printf("[verbose] drawString: hasAlignment=Right (oldX: %d, newX: %d)\n", x, x - size->width);
+#endif
 		x -= size->width;
 	}
 	else if (hasAlignment(alignment, Alignment::Left))
 	{
+#if DEBUG_LEVEL >= 3
+		Serial.printf("[verbose] drawString: hasAlignment=Right (oldX: %d, newX: %d)\n", x, x);
+#endif
 		x = x;
 	}
 
 	if (hasAlignment(alignment, Alignment::VerticalCenter))
 	{
+#if DEBUG_LEVEL >= 3
+		Serial.printf("[verbose] drawString: hasAlignment=VerticalCenter (oldY: %d, newY: %d)\n", y, y + size->height / 2);
+#endif
 		y += size->height / 2;
 	}
 	else if (hasAlignment(alignment, Alignment::Top))
 	{
+#if DEBUG_LEVEL >= 3
+		Serial.printf("[verbose] drawString: hasAlignment=Top (oldY: %d, newY: %d)\n", y, y + size->height);
+#endif
 		y += size->height;
 	}
 	else if (hasAlignment(alignment, Alignment::Bottom))
 	{
+#if DEBUG_LEVEL >= 3
+		Serial.printf("[verbose] drawString: hasAlignment=Bottom (oldY: %d, newY: %d)\n", y, y);
+#endif
 		y = y;
 	}
+
+#if DEBUG_LEVEL >= 3
+	Serial.printf("[verbose] Buffer: setCursor x=%d / y=%d\n", x, y);
+#endif
 
 	display->setCursor(x, y);
 	display->setTextColor(foregroundColor);
@@ -191,15 +215,14 @@ void DisplayBuffer::drawRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
 	display->fillRect(x, y + h - thickness, w, thickness, foregroundColor); // bottom column
 }
 
-/* Draws a string that will flow into the next line when max_width is reached.
- * If a string exceeds max_lines an ellipsis (...) will terminate the last word.
- * Lines will break at spaces(' ') and dashes('-').
- *
- * Note: max_width should be big enough to accommodate the largest word that
- *       will be displayed. If an unbroken string of characters longer than
- *       max_width exist in text, then the string will be printed beyond
- *       max_width.
- */
+// Draws a string that will flow into the next line when max_width is reached.
+// If a string exceeds max_lines an ellipsis (...) will terminate the last word.
+// Lines will break at spaces(' ') and dashes('-').
+//
+// Note: max_width should be big enough to accommodate the largest word that
+//       will be displayed. If an unbroken string of characters longer than
+//       max_width exist in text, then the string will be printed beyond
+//       max_width.
 Rect DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t alignment, uint16_t max_width, uint16_t max_lines)
 {
 	Rect textRect;
@@ -211,15 +234,16 @@ Rect DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t
 	uint16_t current_line = 0;
 	String textRemaining = text;
 
+	int16_t x1, y1;
+	uint16_t w, h;
+
+	display->getTextBounds(textRemaining, 0, 0, &x1, &y1, &w, &h);
+	int16_t line_spacing = h;
+
 	// print until we reach max_lines or no more text remains
 	while (current_line < max_lines && !textRemaining.isEmpty())
 	{
-
-		int16_t x1, y1;
-		uint16_t w, h;
-
 		display->getTextBounds(textRemaining, 0, 0, &x1, &y1, &w, &h);
-		int16_t line_spacing = h;
 
 		int endIndex = textRemaining.length();
 		// check if remaining text is to wide, if it is then print what we can
@@ -283,6 +307,17 @@ Rect DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t
 				}
 			}
 		}
+
+#if DEBUG_LEVEL >= 2
+		if (max_lines > 1)
+		{
+			Serial.printf("[verbose] Draw String (line %d): %s (x=%d / y=%d, height=%d)\n",
+						  current_line + 1,
+						  subStr.c_str(),
+						  x, y + (current_line * line_spacing),
+						  line_spacing);
+		}
+#endif
 
 		Rect r = drawString(x, y + (current_line * line_spacing), subStr, alignment);
 

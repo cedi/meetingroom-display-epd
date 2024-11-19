@@ -89,17 +89,77 @@ int CalendarClient::fetchCalendar()
 	return httpResponse;
 }
 
-const CalendarEntry *CalendarClient::getCurrentEvent(time_t now) const
+const CalendarEntry *CalendarClient::getCurrentEvent(time_t now, bool nowClosestToStart) const
 {
+	CalendarEntries possibleCurrentEvents;
+
+	// because we can have multiple calendar events going at the same time, we need to find all that happen now
 	for (CalendarEntries::const_iterator it = entries.begin(); it != entries.end(); it++)
 	{
 		if (it->getStart() < now && it->getEnd() > now)
 		{
-			return &(*it);
+#if DEBUG_LEVEL >= 2
+			Serial.printf("[verbose] Event %s happening right now\n", it->getTitle().c_str());
+#endif
+			CalendarEntry entry = *it;
+			possibleCurrentEvents.push_back(entry);
 		}
 	}
 
-	return NULL;
+#if DEBUG_LEVEL >= 2
+	Serial.printf("[verbose] Found %d events happening right now\n", possibleCurrentEvents.size());
+#endif
+
+	// if there is none, or multiple, return early
+	switch (possibleCurrentEvents.size())
+	{
+	case 0:
+		return NULL;
+	case 1:
+		CalendarEntry *currentEntry = new CalendarEntry();
+		*currentEntry = possibleCurrentEvents.at(0);
+		return currentEntry;
+	}
+
+	// Now lets try to find the one that starts closest to now
+	CalendarEntry *closest = new CalendarEntry();
+	time_t closestDelta = LONG_MAX;
+
+	// start from ++begin() in order to skip the first one
+	for (CalendarEntries::const_iterator it = possibleCurrentEvents.begin(); it != possibleCurrentEvents.end(); it++)
+	{
+		time_t delta = difftime(nowClosestToStart ? now : it->getEnd(), nowClosestToStart ? it->getStart() : now);
+
+#if DEBUG_LEVEL >= 2
+		Serial.printf("[verbose] Event %s has a delta of %ld to now", it->getTitle().c_str(), delta);
+#endif
+
+		// if two events happen at the same time, then prefer the important one
+		if (delta == closestDelta && it->isImportant() && !closest->isImportant())
+		{
+#if DEBUG_LEVEL >= 2
+			Serial.printf(" which has the same delta to now than the previous event %s (delta=%ld) but is marked important", closest->getTitle().c_str(), closestDelta);
+#endif
+			*closest = *it;
+		}
+		else if (delta < closestDelta)
+		{
+#if DEBUG_LEVEL >= 2
+			Serial.printf(" which is closer to now than the previous event %s (delta=%ld)", closest->getTitle().c_str(), closestDelta);
+#endif
+			closestDelta = delta;
+			*closest = *it;
+		}
+#if DEBUG_LEVEL >= 2
+		else
+		{
+			Serial.printf(" which has further away from now than the previously found closest event %s (delta=%ld)", closest->getTitle().c_str(), closestDelta);
+		}
+		Serial.printf("\n");
+#endif
+	}
+
+	return closest;
 }
 
 const CalendarEntry *CalendarClient::getNextEvent(time_t now) const

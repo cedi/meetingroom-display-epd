@@ -67,7 +67,7 @@ void beginDeepSleep(unsigned long startTime, tm *timeInfo, bool calendarFetched 
 	// Sleep duration is until the end of this meeting, or till the beginning of the next meeting
 	if (calendarFetched)
 	{
-		const calendar_client::CalendarEntry *currEvent = calClient.getCurrentEvent(now);
+		const calendar_client::CalendarEntry *currEvent = calClient.getCurrentEvent(now, false);
 
 		if (currEvent != NULL)
 		{

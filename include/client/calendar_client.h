@@ -26,7 +26,13 @@ namespace calendar_client
         String message;
 
     public:
-        CalendarEntry() {};
+        CalendarEntry() : title(""),
+                          start(0),
+                          end(LONG_MAX),
+                          all_day(false),
+                          busy(BusyState::Free),
+                          important(false),
+                          message("") {};
         CalendarEntry(const JsonObject &json);
 
         String getTitle() const { return title; }
@@ -54,7 +60,10 @@ namespace calendar_client
         CalendarClient(String apiEndpoint, int apiPort) : apiEndpoint(apiEndpoint), apiPort(apiPort) {}
         int fetchCalendar();
 
-        const CalendarEntry *getCurrentEvent(time_t now) const;
+        // get the current calendar event. If multiple events are going at the same time,
+        // nowClosestToStart=true will return the event where the starting-time is closest to now
+        // wile nowClosestToStart=false will return the event where the end-time is closest to now
+        const CalendarEntry *getCurrentEvent(time_t now, bool nowClosestToStart = true) const;
         const CalendarEntry *getNextEvent(time_t now) const;
 
         time_t getLastUpdated() const { return last_updated; }
