@@ -22,11 +22,13 @@
 #include <WiFiClient.h>
 #include <Wire.h>
 #include <ctime>
+#include <string>
+#include <sstream>
 
 #include "config.h"
-#include "display_utils.h"
-#include "client_utils.h"
+#include "utils.h"
 #include "client/calendar_client.h"
+#include "components/display_config.h"
 
 #include "icons/196x196/wifi.h"
 #include "icons/196x196/wifi_x.h"
@@ -39,61 +41,54 @@
 
 Preferences prefs;
 calendar_client::CalendarClient calClient("192.168.0.32", 8080);
-Display epd(PIN_EPD_PWR,
-			PIN_EPD_SCK,
-			PIN_EPD_MISO,
-			PIN_EPD_MOSI,
-			PIN_EPD_CS,
-			PIN_EPD_DC,
-			PIN_EPD_RST,
-			PIN_EPD_BUSY,
-			&calClient);
 
-/* Put esp32 into ultra low-power deep sleep (<11μA).
- * Aligns wake time to the minute. Sleep times defined in config.cpp.
- */
-void beginDeepSleep(unsigned long startTime, tm *timeInfo, bool calendarFetched = false)
+#if defined(DISP_3C) || defined(DISP_7C)
+Display epd(PIN_EPD_PWR, PIN_EPD_SCK, PIN_EPD_MISO, PIN_EPD_MOSI, PIN_EPD_CS, PIN_EPD_DC, PIN_EPD_RST, PIN_EPD_BUSY, &calClient, Color::Red);
+#else
+Display epd(PIN_EPD_PWR, PIN_EPD_SCK, PIN_EPD_MISO, PIN_EPD_MOSI, PIN_EPD_CS, PIN_EPD_DC, PIN_EPD_RST, PIN_EPD_BUSY, &calClient);
+#endif
+
+// Put esp32 into ultra low-power deep sleep (<11μA).
+void beginDeepSleep(unsigned long startTime)
 {
+	tm timeInfo = {};
 	// only call getLocalTime if we havent gotten the ntp time yet
-	if (!getLocalTime(timeInfo))
+	if (!getLocalTime(&timeInfo))
 	{
 		Serial.println("Failed to synchronize time before deep-sleep, referencing older time.");
 	}
 
-	time_t now = mktime(timeInfo);
+	time_t now = mktime(&timeInfo);
 
 	int sleepSeconds = SLEEP_DURATION * 60; // SLEEP_DURATION is in minutes, multiply by 60
 
 	// Sleep duration is until the end of this meeting, or till the beginning of the next meeting
-	if (calendarFetched)
+	const calendar_client::CalendarEntry *currEvent = calClient.getCurrentEvent(now, false);
+
+	if (currEvent != NULL)
 	{
-		const calendar_client::CalendarEntry *currEvent = calClient.getCurrentEvent(now, false);
-
-		if (currEvent != NULL)
-		{
-			sleepSeconds = difftime(currEvent->getEnd(), now); // calculate the minutes until the event ends
+		sleepSeconds = difftime(currEvent->getEnd(), now); // calculate the minutes until the event ends
 #if DEBUG_LEVEL >= 1
-			Serial.println("[debug] sleeping till end of this event: " + currEvent->getTitle() + " (" + sleepSeconds + "s)");
+		Serial.println("[debug] sleeping till end of this event: " + currEvent->getTitle() + " (" + sleepSeconds + "s)");
+#endif
+	}
+	else
+	{
+		const calendar_client::CalendarEntry *nextEvent = calClient.getNextEvent(now);
+		if (nextEvent != NULL)
+		{
+			sleepSeconds = difftime(nextEvent->getStart(), now); // calculate the minutes until the next event starts
+#if DEBUG_LEVEL >= 1
+			Serial.println("[debug] sleeping till start of next event: " + nextEvent->getTitle() + " (" + sleepSeconds + "s)");
 #endif
 		}
-		else
-		{
-			const calendar_client::CalendarEntry *nextEvent = calClient.getNextEvent(now);
-			if (nextEvent != NULL)
-			{
-				sleepSeconds = difftime(nextEvent->getStart(), now); // calculate the minutes until the next event starts
-#if DEBUG_LEVEL >= 1
-				Serial.println("[debug] sleeping till start of next event: " + nextEvent->getTitle() + " (" + sleepSeconds + "s)");
-#endif
-			}
-		}
+	}
 
-		// if we sleep for more than SLEEP_DURATION, wake up a bit earlier,
-		// to check for potential new calendar invites
-		if (sleepSeconds > SLEEP_DURATION * 60)
-		{
-			sleepSeconds = SLEEP_DURATION * 60;
-		}
+	// if we sleep for more than SLEEP_DURATION, wake up a bit earlier,
+	// to check for potential new calendar invites
+	if (sleepSeconds > SLEEP_DURATION * 60)
+	{
+		sleepSeconds = SLEEP_DURATION * 60;
 	}
 
 	// add extra delay to compensate for esp32's with fast RTCs.
@@ -103,7 +98,7 @@ void beginDeepSleep(unsigned long startTime, tm *timeInfo, bool calendarFetched 
 	printHeapUsage();
 #endif
 
-	Serial.println("Awake for " + String((millis() - startTime) / 1000.0, 3) + "s");
+	Serial.println("\nAwake for " + String((millis() - startTime) / 1000.0, 3) + "s");
 	Serial.println("Entering deep sleep for " + String(sleepSeconds) + "s");
 	esp_sleep_enable_timer_wakeup(sleepSeconds * 1000000ULL);
 
@@ -142,9 +137,7 @@ void setup()
 		{ // battery is now low for the first time
 			prefs.putBool("lowBat", true);
 			prefs.end();
-			epd.init();
 			epd.error(battery_alert_90deg, "Low Battery");
-			epd.powerOff();
 		}
 
 		// critically low battery
@@ -182,8 +175,6 @@ void setup()
 	// All data should have been loaded from NVS. Close filesystem.
 	prefs.end();
 
-	String statusStr = {};
-	String tmpStr = {};
 	tm timeInfo = {};
 
 	// START WIFI
@@ -193,21 +184,17 @@ void setup()
 	if (wifiStatus != WL_CONNECTED)
 	{
 		killWiFi();
-		epd.init();
 
 		if (wifiStatus == WL_NO_SSID_AVAIL)
 		{
-			Serial.println("Network Not Available");
 			epd.error(wifi_x, "Network Not Available");
 		}
 		else
 		{
-			Serial.println("WiFi Connection Failed");
 			epd.error(wifi_x, "WiFi Connection Failed");
 		}
 
-		epd.powerOff();
-		beginDeepSleep(startTime, &timeInfo);
+		beginDeepSleep(startTime);
 	}
 
 	// TIME SYNCHRONIZATION
@@ -216,13 +203,8 @@ void setup()
 	if (!timeConfigured)
 	{
 		killWiFi();
-
-		Serial.println("Time Synchronization Failed");
-		epd.init();
 		epd.error(wi_time_4, "Time Synchronization Failed");
-		epd.powerOff();
-
-		beginDeepSleep(startTime, &timeInfo);
+		beginDeepSleep(startTime);
 	}
 
 	int httpStatus = calClient.fetchCalendar();
@@ -230,22 +212,17 @@ void setup()
 	{
 		killWiFi();
 
-		Serial.printf("Fetching calendar failed. %d: %s", httpStatus, calendar_client::CalendarClient::getHttpResponsePhrase(httpStatus));
+		std::stringstream ss;
+		ss << "Fetching calendar failed. " << httpStatus << ": " << calendar_client::CalendarClient::getHttpResponsePhrase(httpStatus);
 
-		epd.init();
-		epd.error(wi_cloud_down, statusStr);
-		epd.powerOff();
+		epd.error(wi_cloud_down, ss.str().c_str());
 
-		beginDeepSleep(startTime, &timeInfo);
+		beginDeepSleep(startTime);
 	}
 
-	epd.init();
 	epd.render(mktime(&timeInfo));
-	epd.powerOff();
-
-	// DEEP SLEEP
-	beginDeepSleep(startTime, &timeInfo, true);
-} // end setup
+	beginDeepSleep(startTime);
+}
 
 // This will never run
 void loop()

@@ -2,7 +2,7 @@
 
 #include <vector>
 #include "components.h"
-#include "display_utils.h"
+#include "utils.h"
 #include "client/calendar_client.h"
 
 class Calendar : public DisplayComponent
@@ -12,7 +12,11 @@ private:
     const int entryHeight;
 
 public:
+#if defined(DISP_3C) || defined(DISP_7C)
+    Calendar(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient, Color accentColor);
+#else
     Calendar(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient);
+#endif
 
     virtual void render(time_t now) const override;
 

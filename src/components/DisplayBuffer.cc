@@ -2,6 +2,11 @@
 
 #include "config.h"
 
+DisplayBuffer::DisplayBuffer(int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy)
+{
+	this->display = new GxEPD2_DISPLAY_CLASS<GxEPD2_DRIVER_CLASS, MAX_HEIGHT(GxEPD2_DRIVER_CLASS)>(GxEPD2_DRIVER_CLASS(pin_epd_cs, pin_epd_dc, pin_epd_rst, pin_epd_busy));
+}
+
 // Function to test if a specific alignment flag is set
 bool hasAlignment(uint8_t alignment, Alignment flag)
 {

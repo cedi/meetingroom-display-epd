@@ -6,7 +6,7 @@
 #include <esp_adc_cal.h>
 
 #include "config.h"
-#include "display_utils.h"
+#include "utils.h"
 #include "fonts/Poppins_Regular.h"
 
 #include "icons/24x24/battery_full_90deg.h"
@@ -24,13 +24,23 @@
 #include "icons/24x24/wifi_1_bar.h"
 #include "icons/32x32/wi_refresh.h"
 
+#if defined(DISP_3C) || defined(DISP_7C)
+StatusBar::StatusBar(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient, Color accentColor)
+	: DisplayComponent(buffer, 0, 0, buffer->width(), StatusBarHeight, accentColor)
+#else
 StatusBar::StatusBar(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient)
 	: DisplayComponent(buffer, 0, 0, buffer->width(), StatusBarHeight)
+#endif
 {
+#if defined(DISP_3C) || defined(DISP_7C)
+	rightBound.push_back(new BatteryPercentage(buffer, height, accentColor));
+	rightBound.push_back(new WiFiStatus(buffer, height, accentColor));
+	leftBound.push_back(new DateTime(buffer, height, calClient, accentColor));
+#else
 	rightBound.push_back(new BatteryPercentage(buffer, height));
 	rightBound.push_back(new WiFiStatus(buffer, height));
-
 	leftBound.push_back(new DateTime(buffer, height, calClient));
+#endif
 }
 
 void StatusBar::render(time_t now) const
@@ -44,15 +54,25 @@ void StatusBar::render(time_t now) const
 	for (std::vector<StatusBarComponent *>::const_iterator it = leftBound.begin(); it != leftBound.end(); it++)
 	{
 		(*it)->render(xOffset, 0, now);
-		xOffset += (*it)->width;
+		xOffset += (*it)->getWidth() + 10;
+
+		buffer->drawLine(xOffset, y, xOffset, y + height);
 	}
 
 	xOffset = width;
 	for (std::vector<StatusBarComponent *>::const_iterator it = rightBound.begin(); it != rightBound.end(); it++)
 	{
-		xOffset -= (*it)->width;
+		xOffset -= (*it)->getWidth();
+		buffer->drawLine(xOffset, y, xOffset, y + height);
 		(*it)->render(xOffset, y, now);
 	}
+
+	xOffset = width / 2;
+	buffer->setFont(&FONT_8pt8b);
+
+	tm timeInfo = *localtime(&now);
+	String nowString = getRefreshTimeStr(&timeInfo, true);
+	buffer->drawString(xOffset, y + height / 2 - 1, nowString, Alignment::Center);
 }
 
 // Returns 24x24 bitmap incidcating battery status.
@@ -92,17 +112,79 @@ const uint8_t *BatteryPercentage::getBatBitmap(uint32_t batPercent) const
 	}
 }
 
+int BatteryPercentage::getWidth() const
+{
+	// battery - (expecting 3.7v LiPo)
+	uint32_t batteryVoltage = readBatteryVoltage();
+	uint32_t batPercent = calcBatPercent(batteryVoltage, MIN_BATTERY_VOLTAGE, MAX_BATTERY_VOLTAGE);
+
+	buffer->setFont(&FONT_8pt8b);
+	TextSize *textSize = buffer->getStringBounds(String(batPercent) + String("%"));
+
+	if (textSize == NULL)
+	{
+		return 24;
+	}
+
+	return padding + textSize->width + padding + iconSize;
+}
+
 void BatteryPercentage::render(int x, int y, time_t now) const
 {
 	// battery - (expecting 3.7v LiPo)
-	uint32_t batPercent = calcBatPercent(3.6, MIN_BATTERY_VOLTAGE, MAX_BATTERY_VOLTAGE);
-	buffer->drawBitmap(x, y, getBatBitmap(batPercent), 24, 24);
+	uint32_t batteryVoltage = readBatteryVoltage();
+	uint32_t batPercent = calcBatPercent(batteryVoltage, MIN_BATTERY_VOLTAGE, MAX_BATTERY_VOLTAGE);
+
+	buffer->setBackgroundColor(Color::White);
+	buffer->setForegroundColor(Color::Black);
+	Color fgSave = buffer->getForegroundColor();
+	Color bgSave = buffer->getBackgroundColor();
+
+#if defined(DISP_3C) || defined(DISP_7C)
+	if (batPercent <= 10)
+	{
+		buffer->setForegroundColor(accentColor);
+	}
+#endif
+
+	buffer->setFont(&FONT_8pt8b);
+	int xOffset = x + padding;
+	Rect textSize = buffer->drawString(xOffset, y + height / 2 - 1, String(batPercent) + String("%"), Alignment::VerticalCenter | Alignment::Left);
+
+	xOffset += textSize.width + padding;
+	buffer->drawBitmap(xOffset, y, getBatBitmap(batPercent), 24, 24);
+
+	// reset display color
+	buffer->setForegroundColor(fgSave);
+	buffer->setBackgroundColor(bgSave);
+}
+
+int WiFiStatus::getWidth() const
+{
+	return padding + iconSize + padding;
 }
 
 void WiFiStatus::render(int x, int y, time_t now) const
 {
 	int rssi = WiFi.RSSI();
-	buffer->drawBitmap(x, y, getWiFiBitmap(rssi), 24, 24);
+
+	buffer->setBackgroundColor(Color::White);
+	buffer->setForegroundColor(Color::Black);
+	Color fgSave = buffer->getForegroundColor();
+	Color bgSave = buffer->getBackgroundColor();
+
+#if defined(DISP_3C) || defined(DISP_7C)
+	if (rssi < -70)
+	{
+		buffer->setForegroundColor(accentColor);
+	}
+#endif
+
+	buffer->drawBitmap(x + padding, y, getWiFiBitmap(rssi), iconSize, iconSize);
+
+	// reset display color
+	buffer->setForegroundColor(fgSave);
+	buffer->setBackgroundColor(bgSave);
 }
 
 // Returns 24x24 bitmap incidcating wifi status.
@@ -130,22 +212,38 @@ const uint8_t *WiFiStatus::getWiFiBitmap(int rssi) const
 	}
 }
 
+int DateTime::getWidth() const
+{
+	// get the lastRefreshTime from the server response (when was the)
+	// calendar updated...
+	time_t last_updated = calClient->getLastUpdated();
+	tm timeInfo = *localtime(&last_updated);
+	String refreshTimeStr = getRefreshTimeStr(&timeInfo, true);
+
+	buffer->setFont(&FONT_8pt8b);
+	TextSize *textSize = buffer->getStringBounds(refreshTimeStr);
+
+	if (textSize == NULL)
+	{
+		return 32;
+	}
+
+	return 24 + textSize->width + padding;
+}
+
 void DateTime::render(int x, int y, time_t now) const
 {
 	// get the lastRefreshTime from the server response (when was the)
 	// calendar updated...
 	time_t last_updated = calClient->getLastUpdated();
 	tm timeInfo = *localtime(&last_updated);
-	String refreshTimeStr;
-	getRefreshTimeStr(refreshTimeStr, true, &timeInfo);
-
-	buffer->drawLine(x + width, y, x + width, y + height);
+	String refreshTimeStr = getRefreshTimeStr(&timeInfo, true);
 
 	// I should be using a 24x24 icon here, but I found the
 	// 24x24 is a little too small for my liking. So I'm using
 	// the bigger 32x32 version, but I have to adjust the offsets
 	// just a little so it is center :)
-	buffer->drawBitmap(x - 3, y - 3, wi_refresh, 32, 32);
+	buffer->drawBitmap(x - 3, y - 3, wi_refresh, iconSize, iconSize);
 
 	buffer->setFont(&FONT_8pt8b);
 	buffer->drawString(x + 24, y + height / 2 - 1, refreshTimeStr, Alignment::VerticalCenter | Alignment::Left);

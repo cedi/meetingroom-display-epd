@@ -6,9 +6,15 @@
 #include "icons/196x196/wi_time_2.h" // TODO: Use 128x128
 #include "fonts/Poppins_Regular.h"
 
+#if defined(DISP_3C) || defined(DISP_7C)
+Status::Status(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient, Color accentColor)
+	: DisplayComponent(buffer, 0, StatusBar::StatusBarHeight, buffer->width() / 2, buffer->height() - StatusBar::StatusBarHeight, accentColor),
+#else
 Status::Status(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient)
 	: DisplayComponent(buffer, 0, StatusBar::StatusBarHeight, buffer->width() / 2, buffer->height() - StatusBar::StatusBarHeight),
+#endif
 	  calClient(calClient)
+
 {
 }
 
@@ -19,7 +25,7 @@ void Status::render(time_t now) const
 	const calendar_client::CalendarEntry *currentEvent = calClient->getCurrentEvent(now);
 
 	bool isImportant = false;
-	String statusMsg = "Frei";
+	String statusMsg(TXT_FREE);
 	const unsigned char *icon = NULL;
 	int iconSize = 0;
 
@@ -48,19 +54,23 @@ void Status::render(time_t now) const
 		statusMsg = currentEvent->getMessage() != "" ? currentEvent->getMessage() : currentEvent->getTitle();
 	}
 
+	buffer->setBackgroundColor(Color::White);
+	buffer->setForegroundColor(Color::Black);
+	Color fgSave = buffer->getForegroundColor();
+	Color bgSave = buffer->getBackgroundColor();
+
 	if (isImportant)
 	{
-		buffer->setBackgroundColor(Color::Black);
-		buffer->setForegroundColor(Color::White);
-		buffer->fillBackground(x, y, width, height);
-		buffer->drawRect(x + 20, y + 20, width - 40, height - 40, 10);
 
+#if defined(DISP_3C) || defined(DISP_7C)
+		buffer->setForegroundColor(accentColor);
+#else
+		buffer->setBackgroundColor(Color::Black);
+		buffer->fillBackground(x, y, width, height);
+#endif
+
+		buffer->drawRect(x + 20, y + 20, width - 40, height - 40, 10);
 		maxTextWidth = width - 40;
-	}
-	else
-	{
-		buffer->setBackgroundColor(Color::White);
-		buffer->setForegroundColor(Color::Black);
 	}
 
 	int startX = x + width / 2;
@@ -85,4 +95,8 @@ void Status::render(time_t now) const
 	}
 
 	buffer->drawString(startX, startY + 10, statusMsg, alignment, maxTextWidth, 3);
+
+	// reset display color
+	buffer->setForegroundColor(fgSave);
+	buffer->setBackgroundColor(bgSave);
 }

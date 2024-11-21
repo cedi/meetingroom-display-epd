@@ -6,13 +6,13 @@
 #include "components/statusbar.h"
 #include "components/status.h"
 #include "components/calendar.h"
-#include "display_utils.h"
 #include "client/calendar_client.h"
+#include "utils.h"
+#include "components/display_buffer.h"
 
 class Display
 {
 private:
-	GxEPD2_BW<GxEPD2_750_T7, GxEPD2_750_T7::HEIGHT> display;
 	DisplayBuffer *buffer;
 	int8_t pin_epd_pwr;
 	int8_t pin_epd_sck;
@@ -29,7 +29,12 @@ private:
 
 	// working with the display
 public:
+#if defined(DISP_3C) || defined(DISP_7C)
+	Display(int8_t pin_epd_pwr, int8_t pin_epd_sck, int8_t pin_epd_miso, int8_t pin_epd_mosi, int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy, calendar_client::CalendarClient *calClient, Color accentColor);
+#else
 	Display(int8_t pin_epd_pwr, int8_t pin_epd_sck, int8_t pin_epd_miso, int8_t pin_epd_mosi, int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy, calendar_client::CalendarClient *calClient);
+
+#endif
 
 	// turn on the display and initialize it
 	void init();
@@ -46,22 +51,47 @@ public:
 	// Rendering functions
 public:
 	// renders the display in a single refresh cycle for the display
-	void render(time_t now) const
+	void render(time_t now)
 	{
+		if (!initialized)
+		{
+			init();
+		}
+
 		do
 		{
 			_render(now);
 		} while (buffer->nextPage());
+
+		powerOff();
 	}
 
 	// Draw an error message to the display.
 	// If only title is specified, content of tilte is wrapped across two lines
-	void error(const uint8_t *bitmap_196x196, const String &title, const String &description = "") const
+	void error(const uint8_t *bitmap_196x196, const String &title, const String &description = "")
 	{
+		if (!title.isEmpty())
+		{
+			Serial.printf("[error] %s", title.c_str());
+
+			if (!description.isEmpty())
+			{
+				Serial.printf(" (%s)", description.c_str());
+			}
+			Serial.printf("\n");
+		}
+
+		if (!initialized)
+		{
+			init();
+		}
+
 		do
 		{
 			_error(bitmap_196x196, title, description);
 		} while (buffer->nextPage());
+
+		powerOff();
 	}
 
 	// internal rendering functions.

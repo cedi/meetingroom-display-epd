@@ -7,8 +7,19 @@
 //   If defined, enables increase verbosity over the serial port.
 //   level 0: basic status information, assists troubleshooting (default)
 //   level 1: increased verbosity for debugging
-//   level 2: print api responses to serial monitor
-#define DEBUG_LEVEL 0
+//   level 2: print api responses and verbose info to serial monitor
+//   level 3: print display_buffer drawings (very noisy)
+#define DEBUG_LEVEL 1
+
+// E-PAPER PANEL
+// This project supports the following E-Paper panels:
+//   DISP_BW  - 7.5in e-Paper (v2)      800x480px  Black/White
+//   DISP_3C  - 7.5in e-Paper (B)       800x480px  Red/Black/White
+//   DISP_7C  - 7.3in ACeP e-Paper (F)  800x480px  7-Color
+// Uncomment the macro that identifies your physical panel.
+#define DISP_BW
+// #define DISP_3C
+// #define DISP_7C
 
 // PINS
 // The configuration below is intended for use with the project's official
@@ -67,7 +78,7 @@
 // of the screen.
 // For more information about formatting see
 // https://man7.org/linux/man-pages/man3/strftime.3.html
-#define REFRESH_TIME_FORMAT "%F %H:%M"
+#define REFRESH_TIME_FORMAT "%e.%m.%Y %H:%M"
 
 // NTP_SERVER_1 is the primary time server, while NTP_SERVER_2 is a fallback.
 // pool.ntp.org will find the closest available NTP server to you.
@@ -133,87 +144,92 @@
 
 // HTTP RESPONSE STATUS CODES
 // 1xx - Informational Responses
-#define TXT_HTTP_RESPONSE_100 "Continue";
-#define TXT_HTTP_RESPONSE_101 "Switching Protocols";
-#define TXT_HTTP_RESPONSE_102 "Processing";
-#define TXT_HTTP_RESPONSE_103 "Early Hints";
+#define TXT_HTTP_RESPONSE_100 "Continue"
+#define TXT_HTTP_RESPONSE_101 "Switching Protocols"
+#define TXT_HTTP_RESPONSE_102 "Processing"
+#define TXT_HTTP_RESPONSE_103 "Early Hints"
 // 2xx - Successful Responses
-#define TXT_HTTP_RESPONSE_200 "OK";
-#define TXT_HTTP_RESPONSE_201 "Created";
-#define TXT_HTTP_RESPONSE_202 "Accepted";
-#define TXT_HTTP_RESPONSE_203 "Non-Authoritative Information";
-#define TXT_HTTP_RESPONSE_204 "No Content";
-#define TXT_HTTP_RESPONSE_205 "Reset Content";
-#define TXT_HTTP_RESPONSE_206 "Partial Content";
-#define TXT_HTTP_RESPONSE_207 "Multi-Status";
-#define TXT_HTTP_RESPONSE_208 "Already Reported";
-#define TXT_HTTP_RESPONSE_226 "IM Used";
+#define TXT_HTTP_RESPONSE_200 "OK"
+#define TXT_HTTP_RESPONSE_201 "Created"
+#define TXT_HTTP_RESPONSE_202 "Accepted"
+#define TXT_HTTP_RESPONSE_203 "Non-Authoritative Information"
+#define TXT_HTTP_RESPONSE_204 "No Content"
+#define TXT_HTTP_RESPONSE_205 "Reset Content"
+#define TXT_HTTP_RESPONSE_206 "Partial Content"
+#define TXT_HTTP_RESPONSE_207 "Multi-Status"
+#define TXT_HTTP_RESPONSE_208 "Already Reported"
+#define TXT_HTTP_RESPONSE_226 "IM Used"
 // 3xx - Redirection Responses
-#define TXT_HTTP_RESPONSE_300 "Multiple Choices";
-#define TXT_HTTP_RESPONSE_301 "Moved Permanently";
-#define TXT_HTTP_RESPONSE_302 "Found";
-#define TXT_HTTP_RESPONSE_303 "See Other";
-#define TXT_HTTP_RESPONSE_304 "Not Modified";
-#define TXT_HTTP_RESPONSE_305 "Use Proxy";
-#define TXT_HTTP_RESPONSE_307 "Temporary Redirect";
-#define TXT_HTTP_RESPONSE_308 "Permanent Redirect";
+#define TXT_HTTP_RESPONSE_300 "Multiple Choices"
+#define TXT_HTTP_RESPONSE_301 "Moved Permanently"
+#define TXT_HTTP_RESPONSE_302 "Found"
+#define TXT_HTTP_RESPONSE_303 "See Other"
+#define TXT_HTTP_RESPONSE_304 "Not Modified"
+#define TXT_HTTP_RESPONSE_305 "Use Proxy"
+#define TXT_HTTP_RESPONSE_307 "Temporary Redirect"
+#define TXT_HTTP_RESPONSE_308 "Permanent Redirect"
 // 4xx - Client Error Responses
-#define TXT_HTTP_RESPONSE_400 "Bad Request";
-#define TXT_HTTP_RESPONSE_401 "Unauthorized";
-#define TXT_HTTP_RESPONSE_402 "Payment Required";
-#define TXT_HTTP_RESPONSE_403 "Forbidden";
-#define TXT_HTTP_RESPONSE_404 "Not Found";
-#define TXT_HTTP_RESPONSE_405 "Method Not Allowed";
-#define TXT_HTTP_RESPONSE_406 "Not Acceptable";
-#define TXT_HTTP_RESPONSE_407 "Proxy Authentication Required";
-#define TXT_HTTP_RESPONSE_408 "Request Timeout";
-#define TXT_HTTP_RESPONSE_409 "Conflict";
-#define TXT_HTTP_RESPONSE_410 "Gone";
-#define TXT_HTTP_RESPONSE_411 "Length Required";
-#define TXT_HTTP_RESPONSE_412 "Precondition Failed";
-#define TXT_HTTP_RESPONSE_413 "Content Too Large";
-#define TXT_HTTP_RESPONSE_414 "URI Too Long";
-#define TXT_HTTP_RESPONSE_415 "Unsupported Media Type";
-#define TXT_HTTP_RESPONSE_416 "Range Not Satisfiable";
-#define TXT_HTTP_RESPONSE_417 "Expectation Failed";
-#define TXT_HTTP_RESPONSE_418 "I'm a teapot";
-#define TXT_HTTP_RESPONSE_421 "Misdirected Request";
-#define TXT_HTTP_RESPONSE_422 "Unprocessable Content";
-#define TXT_HTTP_RESPONSE_423 "Locked";
-#define TXT_HTTP_RESPONSE_424 "Failed Dependency";
-#define TXT_HTTP_RESPONSE_425 "Too Early";
-#define TXT_HTTP_RESPONSE_426 "Upgrade Required";
-#define TXT_HTTP_RESPONSE_428 "Precondition Required";
-#define TXT_HTTP_RESPONSE_429 "Too Many Requests";
-#define TXT_HTTP_RESPONSE_431 "Request Header Fields Too Large";
-#define TXT_HTTP_RESPONSE_451 "Unavailable For Legal Reasons";
+#define TXT_HTTP_RESPONSE_400 "Bad Request"
+#define TXT_HTTP_RESPONSE_401 "Unauthorized"
+#define TXT_HTTP_RESPONSE_402 "Payment Required"
+#define TXT_HTTP_RESPONSE_403 "Forbidden"
+#define TXT_HTTP_RESPONSE_404 "Not Found"
+#define TXT_HTTP_RESPONSE_405 "Method Not Allowed"
+#define TXT_HTTP_RESPONSE_406 "Not Acceptable"
+#define TXT_HTTP_RESPONSE_407 "Proxy Authentication Required"
+#define TXT_HTTP_RESPONSE_408 "Request Timeout"
+#define TXT_HTTP_RESPONSE_409 "Conflict"
+#define TXT_HTTP_RESPONSE_410 "Gone"
+#define TXT_HTTP_RESPONSE_411 "Length Required"
+#define TXT_HTTP_RESPONSE_412 "Precondition Failed"
+#define TXT_HTTP_RESPONSE_413 "Content Too Large"
+#define TXT_HTTP_RESPONSE_414 "URI Too Long"
+#define TXT_HTTP_RESPONSE_415 "Unsupported Media Type"
+#define TXT_HTTP_RESPONSE_416 "Range Not Satisfiable"
+#define TXT_HTTP_RESPONSE_417 "Expectation Failed"
+#define TXT_HTTP_RESPONSE_418 "I'm a teapot"
+#define TXT_HTTP_RESPONSE_421 "Misdirected Request"
+#define TXT_HTTP_RESPONSE_422 "Unprocessable Content"
+#define TXT_HTTP_RESPONSE_423 "Locked"
+#define TXT_HTTP_RESPONSE_424 "Failed Dependency"
+#define TXT_HTTP_RESPONSE_425 "Too Early"
+#define TXT_HTTP_RESPONSE_426 "Upgrade Required"
+#define TXT_HTTP_RESPONSE_428 "Precondition Required"
+#define TXT_HTTP_RESPONSE_429 "Too Many Requests"
+#define TXT_HTTP_RESPONSE_431 "Request Header Fields Too Large"
+#define TXT_HTTP_RESPONSE_451 "Unavailable For Legal Reasons"
 // 5xx - Server Error Responses
-#define TXT_HTTP_RESPONSE_500 "Internal Server Error";
-#define TXT_HTTP_RESPONSE_501 "Not Implemented";
-#define TXT_HTTP_RESPONSE_502 "Bad Gateway";
-#define TXT_HTTP_RESPONSE_503 "Service Unavailable";
-#define TXT_HTTP_RESPONSE_504 "Gateway Timeout";
-#define TXT_HTTP_RESPONSE_505 "HTTP Version Not Supported";
-#define TXT_HTTP_RESPONSE_506 "Variant Also Negotiates";
-#define TXT_HTTP_RESPONSE_507 "Insufficient Storage";
-#define TXT_HTTP_RESPONSE_508 "Loop Detected";
-#define TXT_HTTP_RESPONSE_510 "Not Extended";
-#define TXT_HTTP_RESPONSE_511 "Network Authentication Required";
+#define TXT_HTTP_RESPONSE_500 "Internal Server Error"
+#define TXT_HTTP_RESPONSE_501 "Not Implemented"
+#define TXT_HTTP_RESPONSE_502 "Bad Gateway"
+#define TXT_HTTP_RESPONSE_503 "Service Unavailable"
+#define TXT_HTTP_RESPONSE_504 "Gateway Timeout"
+#define TXT_HTTP_RESPONSE_505 "HTTP Version Not Supported"
+#define TXT_HTTP_RESPONSE_506 "Variant Also Negotiates"
+#define TXT_HTTP_RESPONSE_507 "Insufficient Storage"
+#define TXT_HTTP_RESPONSE_508 "Loop Detected"
+#define TXT_HTTP_RESPONSE_510 "Not Extended"
+#define TXT_HTTP_RESPONSE_511 "Network Authentication Required"
 
 // ARDUINOJSON DESERIALIZATION ERROR CODES
-#define TXT_DESERIALIZATION_ERROR_OK "Deserialization OK";
-#define TXT_DESERIALIZATION_ERROR_EMPTY_INPUT "Deserialization Empty Input";
-#define TXT_DESERIALIZATION_ERROR_INCOMPLETE_INPUT "Deserialization Incomplete Input";
-#define TXT_DESERIALIZATION_ERROR_INVALID_INPUT "Deserialization Invalid Input";
-#define TXT_DESERIALIZATION_ERROR_NO_MEMORY "Deserialization No Memory";
-#define TXT_DESERIALIZATION_ERROR_TOO_DEEP "Deserialization Too Deep";
+#define TXT_DESERIALIZATION_ERROR_OK "Deserialization OK"
+#define TXT_DESERIALIZATION_ERROR_EMPTY_INPUT "Deserialization Empty Input"
+#define TXT_DESERIALIZATION_ERROR_INCOMPLETE_INPUT "Deserialization Incomplete Input"
+#define TXT_DESERIALIZATION_ERROR_INVALID_INPUT "Deserialization Invalid Input"
+#define TXT_DESERIALIZATION_ERROR_NO_MEMORY "Deserialization No Memory"
+#define TXT_DESERIALIZATION_ERROR_TOO_DEEP "Deserialization Too Deep"
 
 // WIFI STATUS
-#define TXT_WL_NO_SHIELD "No Shield";
-#define TXT_WL_IDLE_STATUS "Idle";
-#define TXT_WL_NO_SSID_AVAIL "No SSID Available";
-#define TXT_WL_SCAN_COMPLETED "Scan Complete";
-#define TXT_WL_CONNECTED "Connected";
-#define TXT_WL_CONNECT_FAILED "Connection Failed";
-#define TXT_WL_CONNECTION_LOST "Connection Lost";
-#define TXT_WL_DISCONNECTED "Disconnected";
+#define TXT_WL_NO_SHIELD "No Shield"
+#define TXT_WL_IDLE_STATUS "Idle"
+#define TXT_WL_NO_SSID_AVAIL "No SSID Available"
+#define TXT_WL_SCAN_COMPLETED "Scan Complete"
+#define TXT_WL_CONNECTED "Connected"
+#define TXT_WL_CONNECT_FAILED "Connection Failed"
+#define TXT_WL_CONNECTION_LOST "Connection Lost"
+#define TXT_WL_DISCONNECTED "Disconnected"
+
+// display strings
+#define TXT_EVENTS "events"
+#define TXT_UNTIL "bis"
+#define TXT_FREE "Frei"

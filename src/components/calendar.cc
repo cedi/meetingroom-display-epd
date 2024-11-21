@@ -12,8 +12,14 @@
 #include "icons/32x32/x_symbol.h"
 #include "fonts/Poppins_Regular.h"
 
+#if defined(DISP_3C) || defined(DISP_7C)
+Calendar::Calendar(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient, Color accentColor)
+	: DisplayComponent(buffer, buffer->width() / 2, StatusBar::StatusBarHeight, buffer->width() / 2, buffer->height() - StatusBar::StatusBarHeight, accentColor),
+
+#else
 Calendar::Calendar(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient)
 	: DisplayComponent(buffer, buffer->width() / 2, StatusBar::StatusBarHeight, buffer->width() / 2, buffer->height() - StatusBar::StatusBarHeight),
+#endif
 	  calClient(calClient),
 	  entryHeight(48)
 {
@@ -69,7 +75,7 @@ void Calendar::render(time_t now) const
 	if (overflowingMeetings > 0)
 	{
 		int availableHeight = height - maxCalendarEntries * entryHeight;
-		String remainingText("+" + String(overflowingMeetings) + " events...");
+		String remainingText("+" + String(overflowingMeetings) + " " + TXT_EVENTS + "...");
 
 		buffer->setFont(&FONT_9pt8b);
 		buffer->drawString(x + width / 2, yOffset + availableHeight / 2, remainingText, Alignment::Center, width, 1);
@@ -91,15 +97,21 @@ void Calendar::renderCalendarEntry(int x, int y, const calendar_client::Calendar
 
 	buffer->setBackgroundColor(Color::White);
 	buffer->setForegroundColor(Color::Black);
+	Color fgSave = buffer->getForegroundColor();
+	Color bgSave = buffer->getBackgroundColor();
 
 	if (isCurrentEvent)
 	{
 		bitmapSize = 48;
 		icon = wi_time_2;
 
+#if defined(DISP_3C) || defined(DISP_7C)
+		buffer->setForegroundColor(accentColor);
+#else
 		buffer->setBackgroundColor(Color::Black);
 		buffer->setForegroundColor(Color::White);
-		buffer->fillBackground(x, y, width, entryHeight);
+		buffer->fillBackground(x, y, width, height);
+#endif
 	}
 	else if (entry.isImportant() && !isPastEvent)
 	{
@@ -130,18 +142,16 @@ void Calendar::renderCalendarEntry(int x, int y, const calendar_client::Calendar
 
 	tm tmFrom = {};
 	tm tmTo = {};
-	String fromStr;
-	String toStr;
 
 	time_t entryStart = entry.getStart();
 	time_t entryEnd = entry.getEnd();
 	tmFrom = *localtime(&entryStart);
 	tmTo = *localtime(&entryEnd);
 
-	getTimeStr(fromStr, &tmFrom);
-	getTimeStr(toStr, &tmTo);
+	String fromStr = getTimeStr(&tmFrom);
+	String toStr = getTimeStr(&tmTo);
 
-	String timeString = fromStr + String(" bis ") + toStr;
+	String timeString(fromStr + " " + TXT_UNTIL + " " + toStr);
 
 	// Draw the hours
 	buffer->setFont(&FONT_9pt8b);
@@ -153,4 +163,8 @@ void Calendar::renderCalendarEntry(int x, int y, const calendar_client::Calendar
 	}
 
 	buffer->drawLine(x, y + entryHeight, x + width, y + entryHeight);
+
+	// reset display color
+	buffer->setForegroundColor(fgSave);
+	buffer->setBackgroundColor(bgSave);
 }
