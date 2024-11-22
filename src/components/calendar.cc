@@ -2,15 +2,10 @@
 #include <Preferences.h>
 
 #include "config.h"
+#include "utils.h"
 
 #include "components/calendar.h"
 #include "components/statusbar.h"
-
-#include "icons/32x32/calendar.h"
-#include "icons/48x48/wi_time_2.h"
-#include "icons/48x48/warning_icon.h"
-#include "icons/32x32/x_symbol.h"
-#include "fonts/Poppins_Regular.h"
 
 #if defined(DISP_3C) || defined(DISP_7C)
 Calendar::Calendar(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient, Color accentColor)
@@ -77,7 +72,7 @@ void Calendar::render(time_t now) const
 		int availableHeight = height - maxCalendarEntries * entryHeight;
 		String remainingText("+" + String(overflowingMeetings) + " " + TXT_EVENTS + "...");
 
-		buffer->setFont(&FONT_9pt8b);
+		buffer->setFontSize(9);
 		buffer->drawString(x + width / 2, yOffset + availableHeight / 2, remainingText, Alignment::Center, width, 1);
 	}
 }
@@ -92,8 +87,10 @@ void Calendar::renderCalendarEntry(int x, int y, const calendar_client::Calendar
 #endif
 
 	int offsetX = x;
+	int offsetY = y;
 	int bitmapSize = 32;
-	const unsigned char *icon = calendar;
+
+	String icon = "calendar";
 
 	buffer->setBackgroundColor(Color::White);
 	buffer->setForegroundColor(Color::Black);
@@ -103,41 +100,44 @@ void Calendar::renderCalendarEntry(int x, int y, const calendar_client::Calendar
 	if (isCurrentEvent)
 	{
 		bitmapSize = 48;
-		icon = wi_time_2;
+		icon = "wi_time_2";
 
 #if defined(DISP_3C) || defined(DISP_7C)
 		buffer->setForegroundColor(accentColor);
 #else
 		buffer->setBackgroundColor(Color::Black);
 		buffer->setForegroundColor(Color::White);
-		buffer->fillBackground(x, y, width, height);
+		buffer->fillBackground(x, y, width, entryHeight);
 #endif
 	}
 	else if (entry.isImportant() && !isPastEvent)
 	{
 		bitmapSize = 48;
-		icon = warning_icon;
+		icon = "warning_icon";
 	}
 
-	buffer->drawBitmap(offsetX + entryHeight / 2 - bitmapSize / 2, y + entryHeight / 2 - bitmapSize / 2, icon, bitmapSize, bitmapSize);
+	offsetX += entryHeight / 2;
+	offsetY += entryHeight / 2;
+
+	buffer->drawIcon(offsetX, offsetY, icon, bitmapSize, Alignment::HorizontalCenter | Alignment::VerticalCenter);
 
 	if (isPastEvent)
 	{
 		// for past events, we cross out the calendar icon
-		buffer->drawBitmap(offsetX + entryHeight / 2 - bitmapSize / 2, y + entryHeight / 2 - bitmapSize / 2, x_symbol, bitmapSize, bitmapSize);
+		buffer->drawIcon(offsetX, offsetY, "x_symbol", bitmapSize, Alignment::HorizontalCenter | Alignment::VerticalCenter);
 	}
 
-	// ok, we drawed the 32x32 icon, let's leave some space around
-	offsetX += entryHeight;
+	// ok, we drawed the icon, let's leave some space around
+	offsetX += entryHeight / 2;
+	offsetY = y + 5;
 
-	buffer->setFont(&FONT_11pt8b);
-	TextSize *size = buffer->getStringBounds(entry.getTitle(), width - 48, 1);
-	Rect r = buffer->drawString(offsetX, y + entryHeight / 2 - size->height / 2 - 4, entry.getTitle(), Alignment::VerticalCenter | Alignment::Left, width - 48, 1);
+	buffer->setFontSize(12);
+	Rect r = buffer->drawString(offsetX, offsetY, entry.getTitle(), Alignment::Top | Alignment::Left, width - entryHeight, 1);
 
 	if (isPastEvent)
 	{
 		// for past events, we strike through the title
-		buffer->drawLine(r.x, r.y - 6 + r.height / 2, r.x + r.width, r.y - 6 + r.height / 2);
+		buffer->drawLine(r.x, r.y + r.height / 2, r.x + r.width, r.y + r.height / 2);
 	}
 
 	tm tmFrom = {};
@@ -154,12 +154,13 @@ void Calendar::renderCalendarEntry(int x, int y, const calendar_client::Calendar
 	String timeString(fromStr + " " + TXT_UNTIL + " " + toStr);
 
 	// Draw the hours
-	buffer->setFont(&FONT_9pt8b);
-	r = buffer->drawString(offsetX, y + entryHeight - 6, timeString, Alignment::Bottom | Alignment::Left, width - 48, 1);
+	buffer->setFontSize(9);
+	offsetY = y + entryHeight - 5;
+	r = buffer->drawString(offsetX, offsetY, timeString, Alignment::Bottom | Alignment::Left, width - entryHeight, 1);
 
 	if (isPastEvent)
 	{
-		buffer->drawLine(r.x, r.y - r.height / 2, r.x + r.width, r.y - r.height / 2);
+		buffer->drawLine(r.x, r.y + r.height / 2, r.x + r.width, r.y + r.height / 2);
 	}
 
 	buffer->drawLine(x, y + entryHeight, x + width, y + entryHeight);

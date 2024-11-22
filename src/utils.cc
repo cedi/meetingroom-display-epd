@@ -44,6 +44,13 @@
 #include "config.h"
 #include "_strftime.h"
 
+// icons
+#include "icons/icons_24x24.h"
+#include "icons/icons_32x32.h"
+#include "icons/icons_48x48.h"
+#include "icons/icons_128x128.h"
+#include "icons/icons_196x196.h"
+
 // Power-on and connect WiFi.
 wl_status_t startWiFi()
 {
@@ -236,4 +243,905 @@ void disableBuiltinLED()
 	gpio_hold_en(static_cast<gpio_num_t>(LED_BUILTIN));
 	gpio_deep_sleep_hold_en();
 	return;
+}
+
+const uint8_t *getIcon(String iconName, int16_t iconSize)
+{
+	switch (iconSize)
+	{
+	case 24:
+		return getIcon24(iconName);
+		break;
+
+	case 32:
+		return getIcon32(iconName);
+		break;
+
+	case 48:
+		return getIcon48(iconName);
+		break;
+	case 128:
+		return getIcon128(iconName);
+		break;
+
+	case 196:
+		return getIcon196(iconName);
+		break;
+
+	default:
+		Serial.printf("[error]: Icon size '%d' is not available in this firmware", iconSize);
+		return NULL;
+		break;
+	}
+}
+
+const uint8_t *getIcon24(String iconName)
+{
+	if (iconName == "battery_0_bar_90deg")
+	{
+		return battery_0_bar_90deg_24x24;
+	}
+	if (iconName == "calendar")
+	{
+		return calendar_24x24;
+	}
+	if (iconName == "battery_full_90deg")
+	{
+		return battery_full_90deg_24x24;
+	}
+	if (iconName == "battery_6_bar_90deg")
+	{
+		return battery_6_bar_90deg_24x24;
+	}
+	if (iconName == "wifi_off")
+	{
+		return wifi_off_24x24;
+	}
+	if (iconName == "wi_time_12")
+	{
+		return wi_time_12_24x24;
+	}
+	if (iconName == "battery_4_bar_90deg")
+	{
+		return battery_4_bar_90deg_24x24;
+	}
+	if (iconName == "wi_time_4")
+	{
+		return wi_time_4_24x24;
+	}
+	if (iconName == "wifi_1_bar")
+	{
+		return wifi_1_bar_24x24;
+	}
+	if (iconName == "wi_time_11")
+	{
+		return wi_time_11_24x24;
+	}
+	if (iconName == "biological_hazard_symbol")
+	{
+		return biological_hazard_symbol_24x24;
+	}
+	if (iconName == "battery_1_bar_90deg")
+	{
+		return battery_1_bar_90deg_24x24;
+	}
+	if (iconName == "wi_fire")
+	{
+		return wi_fire_24x24;
+	}
+	if (iconName == "wi_cloud_up")
+	{
+		return wi_cloud_up_24x24;
+	}
+	if (iconName == "x_symbol")
+	{
+		return x_symbol_24x24;
+	}
+	if (iconName == "wi_small_craft_advisory")
+	{
+		return wi_small_craft_advisory_24x24;
+	}
+	if (iconName == "wi_time_5")
+	{
+		return wi_time_5_24x24;
+	}
+	if (iconName == "wi_cloud")
+	{
+		return wi_cloud_24x24;
+	}
+	if (iconName == "battery_5_bar_90deg")
+	{
+		return battery_5_bar_90deg_24x24;
+	}
+	if (iconName == "wifi_x")
+	{
+		return wifi_x_24x24;
+	}
+	if (iconName == "wi_alien")
+	{
+		return wi_alien_24x24;
+	}
+	if (iconName == "wi_time_7")
+	{
+		return wi_time_7_24x24;
+	}
+	if (iconName == "battery_2_bar_90deg")
+	{
+		return battery_2_bar_90deg_24x24;
+	}
+	if (iconName == "battery_charging_full_90deg")
+	{
+		return battery_charging_full_90deg_24x24;
+	}
+	if (iconName == "wi_time_8")
+	{
+		return wi_time_8_24x24;
+	}
+	if (iconName == "wi_time_10")
+	{
+		return wi_time_10_24x24;
+	}
+	if (iconName == "wifi_3_bar")
+	{
+		return wifi_3_bar_24x24;
+	}
+	if (iconName == "warning_icon")
+	{
+		return warning_icon_24x24;
+	}
+	if (iconName == "wi_refresh")
+	{
+		return wi_refresh_24x24;
+	}
+	if (iconName == "wi_time_6")
+	{
+		return wi_time_6_24x24;
+	}
+	if (iconName == "wi_na")
+	{
+		return wi_na_24x24;
+	}
+	if (iconName == "wi_time_3")
+	{
+		return wi_time_3_24x24;
+	}
+	if (iconName == "wi_time_2")
+	{
+		return wi_time_2_24x24;
+	}
+	if (iconName == "wi_cloud_refresh")
+	{
+		return wi_cloud_refresh_24x24;
+	}
+	if (iconName == "wi_time_9")
+	{
+		return wi_time_9_24x24;
+	}
+	if (iconName == "error_icon")
+	{
+		return error_icon_24x24;
+	}
+	if (iconName == "wi_cloud_down")
+	{
+		return wi_cloud_down_24x24;
+	}
+	if (iconName == "wifi")
+	{
+		return wifi_24x24;
+	}
+	if (iconName == "battery_3_bar_90deg")
+	{
+		return battery_3_bar_90deg_24x24;
+	}
+	if (iconName == "battery_alert_90deg")
+	{
+		return battery_alert_90deg_24x24;
+	}
+	if (iconName == "wifi_2_bar")
+	{
+		return wifi_2_bar_24x24;
+	}
+	if (iconName == "wi_time_1")
+	{
+		return wi_time_1_24x24;
+	}
+
+	Serial.printf("[error]: Icon '%s' is not available in this firmware", iconName.c_str());
+	return NULL;
+}
+const uint8_t *getIcon32(String iconName)
+{
+	if (iconName == "battery_0_bar_90deg")
+	{
+		return battery_0_bar_90deg_32x32;
+	}
+	if (iconName == "calendar")
+	{
+		return calendar_32x32;
+	}
+	if (iconName == "battery_full_90deg")
+	{
+		return battery_full_90deg_32x32;
+	}
+	if (iconName == "battery_6_bar_90deg")
+	{
+		return battery_6_bar_90deg_32x32;
+	}
+	if (iconName == "wifi_off")
+	{
+		return wifi_off_32x32;
+	}
+	if (iconName == "wi_time_12")
+	{
+		return wi_time_12_32x32;
+	}
+	if (iconName == "battery_4_bar_90deg")
+	{
+		return battery_4_bar_90deg_32x32;
+	}
+	if (iconName == "wi_time_4")
+	{
+		return wi_time_4_32x32;
+	}
+	if (iconName == "wifi_1_bar")
+	{
+		return wifi_1_bar_32x32;
+	}
+	if (iconName == "wi_time_11")
+	{
+		return wi_time_11_32x32;
+	}
+	if (iconName == "biological_hazard_symbol")
+	{
+		return biological_hazard_symbol_32x32;
+	}
+	if (iconName == "battery_1_bar_90deg")
+	{
+		return battery_1_bar_90deg_32x32;
+	}
+	if (iconName == "wi_fire")
+	{
+		return wi_fire_32x32;
+	}
+	if (iconName == "wi_cloud_up")
+	{
+		return wi_cloud_up_32x32;
+	}
+	if (iconName == "x_symbol")
+	{
+		return x_symbol_32x32;
+	}
+	if (iconName == "wi_small_craft_advisory")
+	{
+		return wi_small_craft_advisory_32x32;
+	}
+	if (iconName == "wi_time_5")
+	{
+		return wi_time_5_32x32;
+	}
+	if (iconName == "wi_cloud")
+	{
+		return wi_cloud_32x32;
+	}
+	if (iconName == "battery_5_bar_90deg")
+	{
+		return battery_5_bar_90deg_32x32;
+	}
+	if (iconName == "wifi_x")
+	{
+		return wifi_x_32x32;
+	}
+	if (iconName == "wi_alien")
+	{
+		return wi_alien_32x32;
+	}
+	if (iconName == "wi_time_7")
+	{
+		return wi_time_7_32x32;
+	}
+	if (iconName == "battery_2_bar_90deg")
+	{
+		return battery_2_bar_90deg_32x32;
+	}
+	if (iconName == "battery_charging_full_90deg")
+	{
+		return battery_charging_full_90deg_32x32;
+	}
+	if (iconName == "wi_time_8")
+	{
+		return wi_time_8_32x32;
+	}
+	if (iconName == "wi_time_10")
+	{
+		return wi_time_10_32x32;
+	}
+	if (iconName == "wifi_3_bar")
+	{
+		return wifi_3_bar_32x32;
+	}
+	if (iconName == "warning_icon")
+	{
+		return warning_icon_32x32;
+	}
+	if (iconName == "wi_refresh")
+	{
+		return wi_refresh_32x32;
+	}
+	if (iconName == "wi_time_6")
+	{
+		return wi_time_6_32x32;
+	}
+	if (iconName == "wi_na")
+	{
+		return wi_na_32x32;
+	}
+	if (iconName == "wi_time_3")
+	{
+		return wi_time_3_32x32;
+	}
+	if (iconName == "wi_time_2")
+	{
+		return wi_time_2_32x32;
+	}
+	if (iconName == "wi_cloud_refresh")
+	{
+		return wi_cloud_refresh_32x32;
+	}
+	if (iconName == "wi_time_9")
+	{
+		return wi_time_9_32x32;
+	}
+	if (iconName == "error_icon")
+	{
+		return error_icon_32x32;
+	}
+	if (iconName == "wi_cloud_down")
+	{
+		return wi_cloud_down_32x32;
+	}
+	if (iconName == "wifi")
+	{
+		return wifi_32x32;
+	}
+	if (iconName == "battery_3_bar_90deg")
+	{
+		return battery_3_bar_90deg_32x32;
+	}
+	if (iconName == "battery_alert_90deg")
+	{
+		return battery_alert_90deg_32x32;
+	}
+	if (iconName == "wifi_2_bar")
+	{
+		return wifi_2_bar_32x32;
+	}
+	if (iconName == "wi_time_1")
+	{
+		return wi_time_1_32x32;
+	}
+
+	Serial.printf("[error]: Icon '%s' is not available in this firmware", iconName.c_str());
+	return NULL;
+}
+const uint8_t *getIcon48(String iconName)
+{
+	if (iconName == "battery_0_bar_90deg")
+	{
+		return battery_0_bar_90deg_48x48;
+	}
+	if (iconName == "calendar")
+	{
+		return calendar_48x48;
+	}
+	if (iconName == "battery_full_90deg")
+	{
+		return battery_full_90deg_48x48;
+	}
+	if (iconName == "battery_6_bar_90deg")
+	{
+		return battery_6_bar_90deg_48x48;
+	}
+	if (iconName == "wifi_off")
+	{
+		return wifi_off_48x48;
+	}
+	if (iconName == "wi_time_12")
+	{
+		return wi_time_12_48x48;
+	}
+	if (iconName == "battery_4_bar_90deg")
+	{
+		return battery_4_bar_90deg_48x48;
+	}
+	if (iconName == "wi_time_4")
+	{
+		return wi_time_4_48x48;
+	}
+	if (iconName == "wifi_1_bar")
+	{
+		return wifi_1_bar_48x48;
+	}
+	if (iconName == "wi_time_11")
+	{
+		return wi_time_11_48x48;
+	}
+	if (iconName == "biological_hazard_symbol")
+	{
+		return biological_hazard_symbol_48x48;
+	}
+	if (iconName == "battery_1_bar_90deg")
+	{
+		return battery_1_bar_90deg_48x48;
+	}
+	if (iconName == "wi_fire")
+	{
+		return wi_fire_48x48;
+	}
+	if (iconName == "wi_cloud_up")
+	{
+		return wi_cloud_up_48x48;
+	}
+	if (iconName == "x_symbol")
+	{
+		return x_symbol_48x48;
+	}
+	if (iconName == "wi_small_craft_advisory")
+	{
+		return wi_small_craft_advisory_48x48;
+	}
+	if (iconName == "wi_time_5")
+	{
+		return wi_time_5_48x48;
+	}
+	if (iconName == "wi_cloud")
+	{
+		return wi_cloud_48x48;
+	}
+	if (iconName == "battery_5_bar_90deg")
+	{
+		return battery_5_bar_90deg_48x48;
+	}
+	if (iconName == "wifi_x")
+	{
+		return wifi_x_48x48;
+	}
+	if (iconName == "wi_alien")
+	{
+		return wi_alien_48x48;
+	}
+	if (iconName == "wi_time_7")
+	{
+		return wi_time_7_48x48;
+	}
+	if (iconName == "battery_2_bar_90deg")
+	{
+		return battery_2_bar_90deg_48x48;
+	}
+	if (iconName == "battery_charging_full_90deg")
+	{
+		return battery_charging_full_90deg_48x48;
+	}
+	if (iconName == "wi_time_8")
+	{
+		return wi_time_8_48x48;
+	}
+	if (iconName == "wi_time_10")
+	{
+		return wi_time_10_48x48;
+	}
+	if (iconName == "wifi_3_bar")
+	{
+		return wifi_3_bar_48x48;
+	}
+	if (iconName == "warning_icon")
+	{
+		return warning_icon_48x48;
+	}
+	if (iconName == "wi_refresh")
+	{
+		return wi_refresh_48x48;
+	}
+	if (iconName == "wi_time_6")
+	{
+		return wi_time_6_48x48;
+	}
+	if (iconName == "wi_na")
+	{
+		return wi_na_48x48;
+	}
+	if (iconName == "wi_time_3")
+	{
+		return wi_time_3_48x48;
+	}
+	if (iconName == "wi_time_2")
+	{
+		return wi_time_2_48x48;
+	}
+	if (iconName == "wi_cloud_refresh")
+	{
+		return wi_cloud_refresh_48x48;
+	}
+	if (iconName == "wi_time_9")
+	{
+		return wi_time_9_48x48;
+	}
+	if (iconName == "error_icon")
+	{
+		return error_icon_48x48;
+	}
+	if (iconName == "wi_cloud_down")
+	{
+		return wi_cloud_down_48x48;
+	}
+	if (iconName == "wifi")
+	{
+		return wifi_48x48;
+	}
+	if (iconName == "battery_3_bar_90deg")
+	{
+		return battery_3_bar_90deg_48x48;
+	}
+	if (iconName == "battery_alert_90deg")
+	{
+		return battery_alert_90deg_48x48;
+	}
+	if (iconName == "wifi_2_bar")
+	{
+		return wifi_2_bar_48x48;
+	}
+	if (iconName == "wi_time_1")
+	{
+		return wi_time_1_48x48;
+	}
+
+	Serial.printf("[error]: Icon '%s' is not available in this firmware", iconName.c_str());
+	return NULL;
+}
+const uint8_t *getIcon128(String iconName)
+{
+	if (iconName == "battery_0_bar_90deg")
+	{
+		return battery_0_bar_90deg_128x128;
+	}
+	if (iconName == "calendar")
+	{
+		return calendar_128x128;
+	}
+	if (iconName == "battery_full_90deg")
+	{
+		return battery_full_90deg_128x128;
+	}
+	if (iconName == "battery_6_bar_90deg")
+	{
+		return battery_6_bar_90deg_128x128;
+	}
+	if (iconName == "wifi_off")
+	{
+		return wifi_off_128x128;
+	}
+	if (iconName == "wi_time_12")
+	{
+		return wi_time_12_128x128;
+	}
+	if (iconName == "battery_4_bar_90deg")
+	{
+		return battery_4_bar_90deg_128x128;
+	}
+	if (iconName == "wi_time_4")
+	{
+		return wi_time_4_128x128;
+	}
+	if (iconName == "wifi_1_bar")
+	{
+		return wifi_1_bar_128x128;
+	}
+	if (iconName == "wi_time_11")
+	{
+		return wi_time_11_128x128;
+	}
+	if (iconName == "biological_hazard_symbol")
+	{
+		return biological_hazard_symbol_128x128;
+	}
+	if (iconName == "battery_1_bar_90deg")
+	{
+		return battery_1_bar_90deg_128x128;
+	}
+	if (iconName == "wi_fire")
+	{
+		return wi_fire_128x128;
+	}
+	if (iconName == "wi_cloud_up")
+	{
+		return wi_cloud_up_128x128;
+	}
+	if (iconName == "x_symbol")
+	{
+		return x_symbol_128x128;
+	}
+	if (iconName == "wi_small_craft_advisory")
+	{
+		return wi_small_craft_advisory_128x128;
+	}
+	if (iconName == "wi_time_5")
+	{
+		return wi_time_5_128x128;
+	}
+	if (iconName == "wi_cloud")
+	{
+		return wi_cloud_128x128;
+	}
+	if (iconName == "battery_5_bar_90deg")
+	{
+		return battery_5_bar_90deg_128x128;
+	}
+	if (iconName == "wifi_x")
+	{
+		return wifi_x_128x128;
+	}
+	if (iconName == "wi_alien")
+	{
+		return wi_alien_128x128;
+	}
+	if (iconName == "wi_time_7")
+	{
+		return wi_time_7_128x128;
+	}
+	if (iconName == "battery_2_bar_90deg")
+	{
+		return battery_2_bar_90deg_128x128;
+	}
+	if (iconName == "battery_charging_full_90deg")
+	{
+		return battery_charging_full_90deg_128x128;
+	}
+	if (iconName == "wi_time_8")
+	{
+		return wi_time_8_128x128;
+	}
+	if (iconName == "wi_time_10")
+	{
+		return wi_time_10_128x128;
+	}
+	if (iconName == "wifi_3_bar")
+	{
+		return wifi_3_bar_128x128;
+	}
+	if (iconName == "warning_icon")
+	{
+		return warning_icon_128x128;
+	}
+	if (iconName == "wi_refresh")
+	{
+		return wi_refresh_128x128;
+	}
+	if (iconName == "wi_time_6")
+	{
+		return wi_time_6_128x128;
+	}
+	if (iconName == "wi_na")
+	{
+		return wi_na_128x128;
+	}
+	if (iconName == "wi_time_3")
+	{
+		return wi_time_3_128x128;
+	}
+	if (iconName == "wi_time_2")
+	{
+		return wi_time_2_128x128;
+	}
+	if (iconName == "wi_cloud_refresh")
+	{
+		return wi_cloud_refresh_128x128;
+	}
+	if (iconName == "wi_time_9")
+	{
+		return wi_time_9_128x128;
+	}
+	if (iconName == "error_icon")
+	{
+		return error_icon_128x128;
+	}
+	if (iconName == "wi_cloud_down")
+	{
+		return wi_cloud_down_128x128;
+	}
+	if (iconName == "wifi")
+	{
+		return wifi_128x128;
+	}
+	if (iconName == "battery_3_bar_90deg")
+	{
+		return battery_3_bar_90deg_128x128;
+	}
+	if (iconName == "battery_alert_90deg")
+	{
+		return battery_alert_90deg_128x128;
+	}
+	if (iconName == "wifi_2_bar")
+	{
+		return wifi_2_bar_128x128;
+	}
+	if (iconName == "wi_time_1")
+	{
+		return wi_time_1_128x128;
+	}
+
+	Serial.printf("[error]: Icon '%s' is not available in this firmware", iconName.c_str());
+	return NULL;
+}
+const uint8_t *getIcon196(String iconName)
+{
+	if (iconName == "battery_0_bar_90deg")
+	{
+		return battery_0_bar_90deg_196x196;
+	}
+	if (iconName == "calendar")
+	{
+		return calendar_196x196;
+	}
+	if (iconName == "battery_full_90deg")
+	{
+		return battery_full_90deg_196x196;
+	}
+	if (iconName == "battery_6_bar_90deg")
+	{
+		return battery_6_bar_90deg_196x196;
+	}
+	if (iconName == "wifi_off")
+	{
+		return wifi_off_196x196;
+	}
+	if (iconName == "wi_time_12")
+	{
+		return wi_time_12_196x196;
+	}
+	if (iconName == "battery_4_bar_90deg")
+	{
+		return battery_4_bar_90deg_196x196;
+	}
+	if (iconName == "wi_time_4")
+	{
+		return wi_time_4_196x196;
+	}
+	if (iconName == "wifi_1_bar")
+	{
+		return wifi_1_bar_196x196;
+	}
+	if (iconName == "wi_time_11")
+	{
+		return wi_time_11_196x196;
+	}
+	if (iconName == "biological_hazard_symbol")
+	{
+		return biological_hazard_symbol_196x196;
+	}
+	if (iconName == "battery_1_bar_90deg")
+	{
+		return battery_1_bar_90deg_196x196;
+	}
+	if (iconName == "wi_fire")
+	{
+		return wi_fire_196x196;
+	}
+	if (iconName == "wi_cloud_up")
+	{
+		return wi_cloud_up_196x196;
+	}
+	if (iconName == "x_symbol")
+	{
+		return x_symbol_196x196;
+	}
+	if (iconName == "wi_small_craft_advisory")
+	{
+		return wi_small_craft_advisory_196x196;
+	}
+	if (iconName == "wi_time_5")
+	{
+		return wi_time_5_196x196;
+	}
+	if (iconName == "wi_cloud")
+	{
+		return wi_cloud_196x196;
+	}
+	if (iconName == "battery_5_bar_90deg")
+	{
+		return battery_5_bar_90deg_196x196;
+	}
+	if (iconName == "wifi_x")
+	{
+		return wifi_x_196x196;
+	}
+	if (iconName == "wi_alien")
+	{
+		return wi_alien_196x196;
+	}
+	if (iconName == "wi_time_7")
+	{
+		return wi_time_7_196x196;
+	}
+	if (iconName == "battery_2_bar_90deg")
+	{
+		return battery_2_bar_90deg_196x196;
+	}
+	if (iconName == "battery_charging_full_90deg")
+	{
+		return battery_charging_full_90deg_196x196;
+	}
+	if (iconName == "wi_time_8")
+	{
+		return wi_time_8_196x196;
+	}
+	if (iconName == "wi_time_10")
+	{
+		return wi_time_10_196x196;
+	}
+	if (iconName == "wifi_3_bar")
+	{
+		return wifi_3_bar_196x196;
+	}
+	if (iconName == "warning_icon")
+	{
+		return warning_icon_196x196;
+	}
+	if (iconName == "wi_refresh")
+	{
+		return wi_refresh_196x196;
+	}
+	if (iconName == "wi_time_6")
+	{
+		return wi_time_6_196x196;
+	}
+	if (iconName == "wi_na")
+	{
+		return wi_na_196x196;
+	}
+	if (iconName == "wi_time_3")
+	{
+		return wi_time_3_196x196;
+	}
+	if (iconName == "wi_time_2")
+	{
+		return wi_time_2_196x196;
+	}
+	if (iconName == "wi_cloud_refresh")
+	{
+		return wi_cloud_refresh_196x196;
+	}
+	if (iconName == "wi_time_9")
+	{
+		return wi_time_9_196x196;
+	}
+	if (iconName == "error_icon")
+	{
+		return error_icon_196x196;
+	}
+	if (iconName == "wi_cloud_down")
+	{
+		return wi_cloud_down_196x196;
+	}
+	if (iconName == "wifi")
+	{
+		return wifi_196x196;
+	}
+	if (iconName == "battery_3_bar_90deg")
+	{
+		return battery_3_bar_90deg_196x196;
+	}
+	if (iconName == "battery_alert_90deg")
+	{
+		return battery_alert_90deg_196x196;
+	}
+	if (iconName == "wifi_2_bar")
+	{
+		return wifi_2_bar_196x196;
+	}
+	if (iconName == "wi_time_1")
+	{
+		return wi_time_1_196x196;
+	}
+
+	Serial.printf("[error]: Icon '%s' is not available in this firmware", iconName.c_str());
+	return NULL;
 }

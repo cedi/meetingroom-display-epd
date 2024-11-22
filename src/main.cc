@@ -30,13 +30,6 @@
 #include "client/calendar_client.h"
 #include "components/display_config.h"
 
-#include "icons/196x196/wifi.h"
-#include "icons/196x196/wifi_x.h"
-#include "icons/196x196/wi_time_4.h"
-#include "icons/196x196/biological_hazard_symbol.h"
-#include "icons/196x196/battery_alert_90deg.h"
-#include "icons/196x196/wi_cloud_down.h"
-
 #include "display.h"
 
 Preferences prefs;
@@ -137,7 +130,7 @@ void setup()
 		{ // battery is now low for the first time
 			prefs.putBool("lowBat", true);
 			prefs.end();
-			epd.error(battery_alert_90deg, "Low Battery");
+			epd.error("battery_alert_90deg", "Low Battery");
 		}
 
 		// critically low battery
@@ -187,11 +180,11 @@ void setup()
 
 		if (wifiStatus == WL_NO_SSID_AVAIL)
 		{
-			epd.error(wifi_x, "Network Not Available");
+			epd.error("wifi_x", "Network Not Available");
 		}
 		else
 		{
-			epd.error(wifi_x, "WiFi Connection Failed");
+			epd.error("wifi_x", "WiFi Connection Failed");
 		}
 
 		beginDeepSleep(startTime);
@@ -203,7 +196,7 @@ void setup()
 	if (!timeConfigured)
 	{
 		killWiFi();
-		epd.error(wi_time_4, "Time Synchronization Failed");
+		epd.error("wi_time_4", "Time Synchronization Failed");
 		beginDeepSleep(startTime);
 	}
 
@@ -215,7 +208,7 @@ void setup()
 		std::stringstream ss;
 		ss << "Fetching calendar failed. " << httpStatus << ": " << calendar_client::CalendarClient::getHttpResponsePhrase(httpStatus);
 
-		epd.error(wi_cloud_down, ss.str().c_str());
+		epd.error("wi_cloud_down", ss.str().c_str());
 
 		beginDeepSleep(startTime);
 	}

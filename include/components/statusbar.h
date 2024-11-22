@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <string>
+
 #include "components.h"
 #include "client/calendar_client.h"
 #include "config.h"
@@ -61,7 +63,7 @@ public:
     virtual int getWidth() const override;
 
 protected:
-    const uint8_t *getBatBitmap(uint32_t batPercent) const;
+    String getBatBitmap(uint32_t batPercent) const;
 };
 
 class WiFiStatus : public StatusBarComponent
@@ -80,7 +82,7 @@ public:
     virtual int getWidth() const override;
 
 protected:
-    const uint8_t *getWiFiBitmap(int rssi) const;
+    String getWiFiBitmap(int rssi) const;
 };
 
 class DateTime : public StatusBarComponent

@@ -1,7 +1,10 @@
 #pragma once
 
+#include <string>
+
 #include "config.h"
 #include "components/display_config.h"
+#include "utils.h"
 
 class DisplayBuffer
 {
@@ -9,6 +12,7 @@ private:
 	GxEPD2_DISPLAY_CLASS<GxEPD2_DRIVER_CLASS, MAX_HEIGHT(GxEPD2_DRIVER_CLASS)> *display;
 	Color foregroundColor;
 	Color backgroundColor;
+	uint8_t fontSize;
 
 public:
 	DisplayBuffer(int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy);
@@ -29,7 +33,8 @@ public:
 	bool nextPage() { return display->nextPage(); }
 
 	void setTextSize(uint8_t s) { this->display->setTextSize(s); }
-	void setFont(const GFXfont *f) { display->setFont(f); }
+	void setFontSize(uint8_t fontSize);
+	uint8_t getFontSize() const { return this->fontSize; }
 	void setForegroundColor(Color c) { this->foregroundColor = c; }
 	void setBackgroundColor(Color c) { this->backgroundColor = c; }
 
@@ -41,19 +46,21 @@ public:
 
 	void clearDisplay();
 
-	Rect drawString(int16_t x, int16_t y, const String &text, uint8_t alignment = Alignment::Left);
+	Rect drawString(int16_t x, int16_t y, const String &text, uint8_t alignment = Alignment::Top | Alignment::Left);
 	Rect drawString(int16_t x, int16_t y, const String &text, uint8_t alignment, uint16_t max_width, uint16_t max_lines);
 
-	TextSize *getStringBounds(int16_t x, int16_t y, const String &text);
-	TextSize *getStringBounds(const String &text) { return getStringBounds(0, 0, text); }
-	TextSize *getStringBounds(int16_t x, int16_t y, const String &text, uint16_t max_width, uint16_t max_lines);
-	TextSize *getStringBounds(const String &text, uint16_t max_width, uint16_t max_lines) { return getStringBounds(0, 0, text, max_width, max_lines); }
+	TextSize *getStringBounds(const String &text);
+	TextSize *getStringBounds(const String &text, uint16_t max_width, uint16_t max_lines);
 
 	void drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[], int16_t width, int16_t height);
+	void drawIcon(int16_t x, int16_t y, const String &iconName, int16_t size, uint8_t alignment = Alignment::Top | Alignment::Left);
 	void drawRect(int16_t x, int16_t y, int16_t w, int16_t h) { display->drawRect(x, y, w, h, foregroundColor); }
 	void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t thickness);
 
 	void fillBackground(int16_t x, int16_t y, int16_t w, int16_t h) { display->fillRect(x, y, w, h, backgroundColor); }
 
 	void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1) { display->drawLine(x0, y0, x1, y1, foregroundColor); }
+
+protected:
+	static void _setFontSize(Adafruit_GFX *buffer, uint8_t fontSize);
 };

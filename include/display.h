@@ -68,7 +68,7 @@ public:
 
 	// Draw an error message to the display.
 	// If only title is specified, content of tilte is wrapped across two lines
-	void error(const uint8_t *bitmap_196x196, const String &title, const String &description = "")
+	void error(String icon, const String &title, const String &description = "")
 	{
 		if (!title.isEmpty())
 		{
@@ -88,15 +88,23 @@ public:
 
 		do
 		{
-			_error(bitmap_196x196, title, description);
+			_fullPageStatus(icon, 196, title, description);
 		} while (buffer->nextPage());
 
 		powerOff();
 	}
 
+	void fullPageStatus(String icon, int16_t iconSize, const String &title, const String &description) const
+	{
+		do
+		{
+			_fullPageStatus(icon, 196, title, description);
+		} while (buffer->nextPage());
+	}
+
 	// internal rendering functions.
 	// they draw the display, but do not take care of the nextPage. That is done in the public variants
 protected:
-	void _error(const uint8_t *bitmap_196x196, const String &title, const String &description = "") const;
+	void _fullPageStatus(String icon, int16_t iconSize, const String &title, const String &description) const;
 	void _render(time_t now) const;
 };

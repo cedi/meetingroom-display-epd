@@ -1,5 +1,10 @@
 #include "components/components.h"
 
+#include <Fonts/FreeSans24pt7b.h>
+#include <Fonts/FreeSans18pt7b.h>
+#include <Fonts/FreeSans12pt7b.h>
+#include <Fonts/FreeSans9pt7b.h>
+
 #include "config.h"
 
 DisplayBuffer::DisplayBuffer(int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy)
@@ -32,10 +37,54 @@ void DisplayBuffer::clearDisplay()
 	display->fillScreen(backgroundColor);
 }
 
+void DisplayBuffer::setFontSize(uint8_t fontSize)
+{
+	this->fontSize = fontSize;
+	DisplayBuffer::_setFontSize(display, fontSize);
+}
+
+void DisplayBuffer::_setFontSize(Adafruit_GFX *buffer, uint8_t fontSize)
+{
+	switch (fontSize)
+	{
+	case 9:
+		buffer->setFont(&FreeSans9pt7b);
+		break;
+
+	case 12:
+		buffer->setFont(&FreeSans12pt7b);
+		break;
+
+	case 18:
+		buffer->setFont(&FreeSans18pt7b);
+		break;
+
+	case 24:
+		buffer->setFont(&FreeSans24pt7b);
+		break;
+
+	default:
+		buffer->setFont(&FreeSans12pt7b);
+		Serial.printf("[error]: font-size %d is not available. Only one of 9, 12, 18, 24 is supported\n", fontSize);
+	}
+}
+
+bool containsAnyChar(const String &str1, const String &str2)
+{
+	for (size_t i = 0; i < str2.length(); i++)
+	{
+		if (str1.indexOf(str2[i]) != -1)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 // Draw a String on x/y coordinate
 Rect DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t alignment)
 {
-	TextSize *size = getStringBounds(x, y, text);
+	TextSize *size = getStringBounds(text);
 
 	if (hasAlignment(alignment, Alignment::HorizontalCenter))
 	{
@@ -64,45 +113,61 @@ Rect DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t
 #if DEBUG_LEVEL >= 3
 		Serial.printf("[verbose] drawString: hasAlignment=VerticalCenter (oldY: %d, newY: %d)\n", y, y + size->height / 2);
 #endif
-		y += size->height / 2;
+		y -= size->height / 2;
 	}
 	else if (hasAlignment(alignment, Alignment::Top))
 	{
 #if DEBUG_LEVEL >= 3
 		Serial.printf("[verbose] drawString: hasAlignment=Top (oldY: %d, newY: %d)\n", y, y + size->height);
 #endif
-		y += size->height;
+		y = y;
 	}
 	else if (hasAlignment(alignment, Alignment::Bottom))
 	{
 #if DEBUG_LEVEL >= 3
 		Serial.printf("[verbose] drawString: hasAlignment=Bottom (oldY: %d, newY: %d)\n", y, y);
 #endif
-		y = y;
+		y = y - size->height;
 	}
 
 #if DEBUG_LEVEL >= 3
 	Serial.printf("[verbose] Buffer: setCursor x=%d / y=%d\n", x, y);
 #endif
 
-	display->setCursor(x, y);
+	int offsetY = y + size->height;
+
+	// I hate this!
+	// if the string to draw contains a descender, than we have to
+	// adjust the Y offset to include the descender height since print
+	bool containsDescender = containsAnyChar(text, "qypgj()");
+	if (containsDescender)
+	{
+		offsetY -= size->height / 3;
+	}
+
 	display->setTextColor(foregroundColor);
+	display->setCursor(x, offsetY);
 	display->print(text);
 
 	Rect r;
-	r.x = x;
-	r.y = y;
-	r.width = size->width;
+	r.x = x + 1;
+	r.y = y - 1;
+	r.width = size->width + 1;
 	r.height = size->height;
+
+#if DEBUG_LEVEL >= 4
+	Serial.printf("Height: %d\n", r.height);
+	drawRect(r.x, r.y, r.width, r.height);
+#endif
 
 	return r;
 }
 
-TextSize *DisplayBuffer::getStringBounds(int16_t x, int16_t y, const String &text)
+TextSize *DisplayBuffer::getStringBounds(const String &text)
 {
 	int16_t x1, y1;
 	uint16_t w, h;
-	display->getTextBounds(text, x, y, &x1, &y1, &w, &h);
+	display->getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
 
 	TextSize *size = new TextSize();
 	size->width = w;
@@ -110,7 +175,7 @@ TextSize *DisplayBuffer::getStringBounds(int16_t x, int16_t y, const String &tex
 	return size;
 }
 
-TextSize *DisplayBuffer::getStringBounds(int16_t x, int16_t y, const String &text, uint16_t max_width, uint16_t max_lines)
+TextSize *DisplayBuffer::getStringBounds(const String &text, uint16_t max_width, uint16_t max_lines)
 {
 	uint16_t current_line = 0;
 	String textRemaining = text;
@@ -125,7 +190,7 @@ TextSize *DisplayBuffer::getStringBounds(int16_t x, int16_t y, const String &tex
 		int16_t x1, y1;
 		uint16_t w, h;
 
-		display->getTextBounds(textRemaining, x, y, &x1, &y1, &w, &h);
+		display->getTextBounds(textRemaining, 0, 0, &x1, &y1, &w, &h);
 
 		if (w > biggestTextSize->width)
 		{
@@ -204,6 +269,55 @@ TextSize *DisplayBuffer::getStringBounds(int16_t x, int16_t y, const String &tex
 	}
 
 	return biggestTextSize;
+}
+
+void DisplayBuffer::drawIcon(int16_t x, int16_t y, const String &iconName, int16_t size, uint8_t alignment)
+{
+	if (hasAlignment(alignment, Alignment::HorizontalCenter))
+	{
+#if DEBUG_LEVEL >= 3
+		Serial.printf("[verbose] drawIcon: hasAlignment=HorizontalCenter (oldX: %d, newX: %d)\n", x, x - size / 2);
+#endif
+		x -= size / 2;
+	}
+	else if (hasAlignment(alignment, Alignment::Right))
+	{
+#if DEBUG_LEVEL >= 3
+		Serial.printf("[verbose] drawIcon: hasAlignment=Right (oldX: %d, newX: %d)\n", x, x - size);
+#endif
+		x -= size;
+	}
+	else if (hasAlignment(alignment, Alignment::Left))
+	{
+#if DEBUG_LEVEL >= 3
+		Serial.printf("[verbose] drawIcon: hasAlignment=Right (oldX: %d, newX: %d)\n", x, x);
+#endif
+		x = x;
+	}
+
+	if (hasAlignment(alignment, Alignment::VerticalCenter))
+	{
+#if DEBUG_LEVEL >= 3
+		Serial.printf("[verbose] drawIcon: hasAlignment=VerticalCenter (oldY: %d, newY: %d)\n", y, y - size / 2);
+#endif
+		y -= size / 2;
+	}
+	else if (hasAlignment(alignment, Alignment::Top))
+	{
+#if DEBUG_LEVEL >= 3
+		Serial.printf("[verbose] drawIcon: hasAlignment=Top (oldY: %d, newY: %d)\n", y, y);
+#endif
+		y = y;
+	}
+	else if (hasAlignment(alignment, Alignment::Bottom))
+	{
+#if DEBUG_LEVEL >= 3
+		Serial.printf("[verbose] drawIcon: hasAlignment=Bottom (oldY: %d, newY: %d)\n", y, y - size);
+#endif
+		y -= size;
+	}
+
+	drawBitmap(x, y, getIcon(iconName, size), size, size);
 }
 
 void DisplayBuffer::drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[], int16_t width, int16_t height)

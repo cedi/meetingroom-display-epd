@@ -9,6 +9,7 @@
 //   level 1: increased verbosity for debugging
 //   level 2: print api responses and verbose info to serial monitor
 //   level 3: print display_buffer drawings (very noisy)
+//   level 4: draw boundaries on draws
 #define DEBUG_LEVEL 1
 
 // E-PAPER PANEL
@@ -43,8 +44,8 @@
 #define PIN_EPD_PWR 26 // Irrelevant if directly connected to 3.3V
 
 // WIFI
-#define WIFI_SSID "WiFiName"
-#define WIFI_PASSWORD "WiFiPSK"
+#define WIFI_SSID "Elbschloss"
+#define WIFI_PASSWORD "pZUfcu4xCg7p"
 #define WIFI_TIMEOUT 10000 // ms, WiFi connection timeout.
 
 // HTTP

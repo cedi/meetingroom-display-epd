@@ -7,22 +7,6 @@
 
 #include "config.h"
 #include "utils.h"
-#include "fonts/Poppins_Regular.h"
-
-#include "icons/24x24/battery_full_90deg.h"
-#include "icons/24x24/battery_6_bar_90deg.h"
-#include "icons/24x24/battery_5_bar_90deg.h"
-#include "icons/24x24/battery_4_bar_90deg.h"
-#include "icons/24x24/battery_3_bar_90deg.h"
-#include "icons/24x24/battery_2_bar_90deg.h"
-#include "icons/24x24/battery_1_bar_90deg.h"
-#include "icons/24x24/battery_0_bar_90deg.h"
-#include "icons/24x24/wifi_x.h"
-#include "icons/24x24/wifi.h"
-#include "icons/24x24/wifi_3_bar.h"
-#include "icons/24x24/wifi_2_bar.h"
-#include "icons/24x24/wifi_1_bar.h"
-#include "icons/32x32/wi_refresh.h"
 
 #if defined(DISP_3C) || defined(DISP_7C)
 StatusBar::StatusBar(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient, Color accentColor)
@@ -68,47 +52,46 @@ void StatusBar::render(time_t now) const
 	}
 
 	xOffset = width / 2;
-	buffer->setFont(&FONT_8pt8b);
+	buffer->setFontSize(9);
 
 	tm timeInfo = *localtime(&now);
 	String nowString = getRefreshTimeStr(&timeInfo, true);
 	buffer->drawString(xOffset, y + height / 2 - 1, nowString, Alignment::Center);
 }
 
-// Returns 24x24 bitmap incidcating battery status.
-const uint8_t *BatteryPercentage::getBatBitmap(uint32_t batPercent) const
+String BatteryPercentage::getBatBitmap(uint32_t batPercent) const
 {
 	if (batPercent >= 93)
 	{
-		return battery_full_90deg;
+		return "battery_full_90deg";
 	}
 	else if (batPercent >= 79)
 	{
-		return battery_6_bar_90deg;
+		return "battery_6_bar_90deg";
 	}
 	else if (batPercent >= 65)
 	{
-		return battery_5_bar_90deg;
+		return "battery_5_bar_90deg";
 	}
 	else if (batPercent >= 50)
 	{
-		return battery_4_bar_90deg;
+		return "battery_4_bar_90deg";
 	}
 	else if (batPercent >= 36)
 	{
-		return battery_3_bar_90deg;
+		return "battery_3_bar_90deg";
 	}
 	else if (batPercent >= 22)
 	{
-		return battery_2_bar_90deg;
+		return "battery_2_bar_90deg";
 	}
 	else if (batPercent >= 8)
 	{
-		return battery_1_bar_90deg;
+		return "battery_1_bar_90deg";
 	}
 	else // batPercent < 8
 	{
-		return battery_0_bar_90deg;
+		return "battery_0_bar_90deg";
 	}
 }
 
@@ -118,7 +101,7 @@ int BatteryPercentage::getWidth() const
 	uint32_t batteryVoltage = readBatteryVoltage();
 	uint32_t batPercent = calcBatPercent(batteryVoltage, MIN_BATTERY_VOLTAGE, MAX_BATTERY_VOLTAGE);
 
-	buffer->setFont(&FONT_8pt8b);
+	buffer->setFontSize(9);
 	TextSize *textSize = buffer->getStringBounds(String(batPercent) + String("%"));
 
 	if (textSize == NULL)
@@ -147,12 +130,12 @@ void BatteryPercentage::render(int x, int y, time_t now) const
 	}
 #endif
 
-	buffer->setFont(&FONT_8pt8b);
+	buffer->setFontSize(9);
 	int xOffset = x + padding;
 	Rect textSize = buffer->drawString(xOffset, y + height / 2 - 1, String(batPercent) + String("%"), Alignment::VerticalCenter | Alignment::Left);
 
 	xOffset += textSize.width + padding;
-	buffer->drawBitmap(xOffset, y, getBatBitmap(batPercent), 24, 24);
+	buffer->drawIcon(xOffset, y + height / 2, getBatBitmap(batPercent), 24, Alignment::Left | Alignment::VerticalCenter);
 
 	// reset display color
 	buffer->setForegroundColor(fgSave);
@@ -180,7 +163,7 @@ void WiFiStatus::render(int x, int y, time_t now) const
 	}
 #endif
 
-	buffer->drawBitmap(x + padding, y, getWiFiBitmap(rssi), iconSize, iconSize);
+	buffer->drawIcon(x + padding, y + height / 2, getWiFiBitmap(rssi), iconSize, Alignment::Left | Alignment::VerticalCenter);
 
 	// reset display color
 	buffer->setForegroundColor(fgSave);
@@ -188,27 +171,27 @@ void WiFiStatus::render(int x, int y, time_t now) const
 }
 
 // Returns 24x24 bitmap incidcating wifi status.
-const uint8_t *WiFiStatus::getWiFiBitmap(int rssi) const
+String WiFiStatus::getWiFiBitmap(int rssi) const
 {
 	if (rssi == 0)
 	{
-		return wifi_x;
+		return "wifi_x";
 	}
 	else if (rssi >= -50)
 	{
-		return wifi;
+		return "wifi";
 	}
 	else if (rssi >= -60)
 	{
-		return wifi_3_bar;
+		return "wifi_3_bar";
 	}
 	else if (rssi >= -70)
 	{
-		return wifi_2_bar;
+		return "wifi_2_bar";
 	}
 	else
 	{ // rssi < -70
-		return wifi_1_bar;
+		return "wifi_1_bar";
 	}
 }
 
@@ -220,7 +203,7 @@ int DateTime::getWidth() const
 	tm timeInfo = *localtime(&last_updated);
 	String refreshTimeStr = getRefreshTimeStr(&timeInfo, true);
 
-	buffer->setFont(&FONT_8pt8b);
+	buffer->setFontSize(9);
 	TextSize *textSize = buffer->getStringBounds(refreshTimeStr);
 
 	if (textSize == NULL)
@@ -243,8 +226,8 @@ void DateTime::render(int x, int y, time_t now) const
 	// 24x24 is a little too small for my liking. So I'm using
 	// the bigger 32x32 version, but I have to adjust the offsets
 	// just a little so it is center :)
-	buffer->drawBitmap(x - 3, y - 3, wi_refresh, iconSize, iconSize);
+	buffer->drawIcon(x, y + height / 2, "wi_refresh", iconSize, Alignment::Left | Alignment::VerticalCenter);
 
-	buffer->setFont(&FONT_8pt8b);
-	buffer->drawString(x + 24, y + height / 2 - 1, refreshTimeStr, Alignment::VerticalCenter | Alignment::Left);
+	buffer->setFontSize(9);
+	buffer->drawString(x + iconSize, y + height / 2 - 1, refreshTimeStr, Alignment::VerticalCenter | Alignment::Left);
 }

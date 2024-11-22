@@ -3,7 +3,6 @@
 #include "components/statusbar.h"
 #include "components/calendar.h"
 #include "components/status.h"
-#include "fonts/Poppins_Regular.h"
 
 #include "config.h"
 
@@ -78,50 +77,43 @@ void Display::_render(time_t now) const
 	buffer->drawLine(buffer->width() / 2, StatusBar::StatusBarHeight, buffer->width() / 2, buffer->height());
 }
 
-void Display::_error(const uint8_t *bitmap_196x196, const String &title, const String &description) const
+void Display::_fullPageStatus(String icon, int16_t iconSize, const String &title, const String &description) const
 {
 	int startX = buffer->width() / 2;
 	int startY = buffer->height() / 2;
 
 	if (!title.isEmpty())
 	{
-		buffer->setFont(&FONT_22pt8b);
+		buffer->setFontSize(24);
 		TextSize *size = buffer->getStringBounds(title, buffer->width(), 4);
 		startY -= size->height / 2;
 	}
 
 	if (!description.isEmpty())
 	{
-		buffer->setFont(&FONT_18pt8b);
+		buffer->setFontSize(18);
 		TextSize *size = buffer->getStringBounds(description, buffer->width(), 4);
 		startY -= size->height / 2;
 	}
 
 	uint8_t alignment = Alignment::HorizontalCenter | Alignment::Bottom;
 
-	if (bitmap_196x196 == NULL)
+	if (icon != "")
 	{
-		// since we are displaying an error, we know our icons are 196x196
-		int iconSize = 196;
-
-		startX -= iconSize / 2;
-		startY -= iconSize / 2;
-		buffer->drawBitmap(startX, startY - 10, bitmap_196x196, iconSize, iconSize);
-
-		startX += iconSize / 2;
-		startY += iconSize;
+		buffer->drawIcon(startX, startY - 10, icon, iconSize, Alignment::Center);
+		startY += iconSize / 2;
 	}
 
 	if (!title.isEmpty())
 	{
-		buffer->setFont(&FONT_22pt8b);
+		buffer->setFontSize(24);
 		Rect textSize = buffer->drawString(startX, startY + 10, title, alignment, buffer->width(), 4);
 		startY += textSize.height;
 	}
 
 	if (!description.isEmpty())
 	{
-		buffer->setFont(&FONT_18pt8b);
+		buffer->setFontSize(18);
 		buffer->drawString(startX, startY + 10, description, Alignment::Center);
 	}
 }

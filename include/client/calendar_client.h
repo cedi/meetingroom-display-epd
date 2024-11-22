@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include <WiFiClient.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
@@ -33,6 +34,7 @@ namespace calendar_client
                           busy(BusyState::Free),
                           important(false),
                           message("") {};
+
         CalendarEntry(const JsonObject &json);
 
         String getTitle() const { return title; }

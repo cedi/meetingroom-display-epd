@@ -2,10 +2,6 @@
 #include "components/statusbar.h"
 #include "config.h"
 
-#include "icons/196x196/warning_icon.h"
-#include "icons/196x196/wi_time_2.h" // TODO: Use 128x128
-#include "fonts/Poppins_Regular.h"
-
 #if defined(DISP_3C) || defined(DISP_7C)
 Status::Status(DisplayBuffer *buffer, calendar_client::CalendarClient *calClient, Color accentColor)
 	: DisplayComponent(buffer, 0, StatusBar::StatusBarHeight, buffer->width() / 2, buffer->height() - StatusBar::StatusBarHeight, accentColor),
@@ -26,7 +22,7 @@ void Status::render(time_t now) const
 
 	bool isImportant = false;
 	String statusMsg(TXT_FREE);
-	const unsigned char *icon = NULL;
+	String icon("");
 	int iconSize = 0;
 
 	if (currentEvent != NULL)
@@ -40,13 +36,13 @@ void Status::render(time_t now) const
 #endif
 		if (currentEvent->getBusy() == calendar_client::Busy)
 		{
-			icon = wi_time_2;
-			iconSize = 196;
+			icon = "wi_time_2";
+			iconSize = 128;
 		}
 
 		if (currentEvent->isImportant())
 		{
-			icon = warning_icon;
+			icon = "warning_icon";
 			iconSize = 196;
 			isImportant = true;
 		}
@@ -76,20 +72,22 @@ void Status::render(time_t now) const
 	int startX = x + width / 2;
 	int startY = y + height / 2;
 
-	buffer->setFont(&FONT_22pt8b);
+	buffer->setFontSize(24);
 	TextSize *size = buffer->getStringBounds(statusMsg, maxTextWidth, 3);
-	startY -= size->height / 2;
+
+	// do a -5 so we can get some spacing in beetween the icon and the text
+	startY -= size->height / 2 - 10;
 
 	uint8_t alignment = Alignment::Center;
 
-	if (icon != NULL)
+	if (icon != "")
 	{
-		startX -= iconSize / 2;
-		startY -= iconSize / 2;
-		buffer->drawBitmap(startX, startY - 10, icon, iconSize, iconSize);
+		buffer->drawIcon(startX, startY - 10, icon, iconSize, Alignment::Center);
 
-		startX += iconSize / 2;
-		startY += iconSize;
+		startY += iconSize / 2;
+
+		// do a +10 so we can get some spacing in beetween the icon and the text
+		startY += 20;
 
 		alignment = Alignment::HorizontalCenter | Alignment::Bottom;
 	}
