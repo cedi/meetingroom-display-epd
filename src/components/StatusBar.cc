@@ -53,7 +53,6 @@ void StatusBar::render(time_t now) const
 		(*it)->render(xOffset, y, now);
 	}
 
-	xOffset = width / 2;
 	buffer->setFontSize(9);
 
 	tm timeInfo = *localtime(&now);
@@ -63,10 +62,12 @@ void StatusBar::render(time_t now) const
 	if (drawOnLeftBound)
 	{
 		alignment |= Alignment::HorizontalCenter;
+		xOffset = width / 2;
 	}
 	else
 	{
 		alignment |= Alignment::Left;
+		xOffset = 0;
 	}
 
 	buffer->drawString(xOffset, y + height / 2 - 1, nowString, alignment);
