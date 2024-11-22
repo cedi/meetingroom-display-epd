@@ -29,14 +29,15 @@ public:
 	int16_t width() { return display->width(); }
 	int16_t height() { return display->height(); }
 
-	void firstPage();
+	void invert() { setForegroundColor(setBackgroundColor(this->foregroundColor)); }
+
 	bool nextPage() { return display->nextPage(); }
 
 	void setTextSize(uint8_t s) { this->display->setTextSize(s); }
 	void setFontSize(uint8_t fontSize);
 	uint8_t getFontSize() const { return this->fontSize; }
-	void setForegroundColor(Color c) { this->foregroundColor = c; }
-	void setBackgroundColor(Color c) { this->backgroundColor = c; }
+	Color setForegroundColor(Color c);
+	Color setBackgroundColor(Color c);
 
 	Color getForegroundColor() const { return this->foregroundColor; }
 	Color getBackgroundColor() const { return this->backgroundColor; }
@@ -56,10 +57,14 @@ public:
 	void drawIcon(int16_t x, int16_t y, const String &iconName, int16_t size, uint8_t alignment = Alignment::Top | Alignment::Left);
 	void drawRect(int16_t x, int16_t y, int16_t w, int16_t h) { display->drawRect(x, y, w, h, foregroundColor); }
 	void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t thickness);
+	void drawRect(const Rect &r) { drawRect(r.x, r.y, r.width, r.height); }
+	void drawRect(const Rect &r, int16_t thickness) { drawRect(r.x, r.y, r.width, r.height, thickness); }
 
 	void fillBackground(int16_t x, int16_t y, int16_t w, int16_t h) { display->fillRect(x, y, w, h, backgroundColor); }
 
 	void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1) { display->drawLine(x0, y0, x1, y1, foregroundColor); }
+	void drawHLine(int16_t x, int16_t y, int16_t len) { drawLine(x, y, x + len, y); }
+	void drawVLine(int16_t x, int16_t y, int16_t len) { drawLine(x, y, x, y + len); }
 
 protected:
 	static void _setFontSize(Adafruit_GFX *buffer, uint8_t fontSize);

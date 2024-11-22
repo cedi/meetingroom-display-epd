@@ -47,7 +47,7 @@ void Display::init()
 	SPI.begin(pin_epd_sck, pin_epd_miso, pin_epd_mosi, pin_epd_cs);
 
 	// draw first page
-	buffer->firstPage();
+	buffer->clearDisplay();
 
 	initialized = true;
 }
@@ -74,7 +74,7 @@ void Display::_render(time_t now) const
 	calendar->render(now);
 	statusIndicator->render(now);
 
-	buffer->drawLine(buffer->width() / 2, StatusBar::StatusBarHeight, buffer->width() / 2, buffer->height());
+	buffer->drawVLine(buffer->width() / 2, StatusBar::StatusBarHeight, buffer->height());
 }
 
 void Display::_fullPageStatus(String icon, int16_t iconSize, const String &title, const String &description) const

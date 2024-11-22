@@ -22,6 +22,10 @@
 // #define DISP_3C
 // #define DISP_7C
 
+#ifdef DISP_BW
+#define INVERT_AS_ACCENT true
+#endif
+
 // PINS
 // The configuration below is intended for use with the project's official
 // wiring diagrams using the FireBeetle 2 ESP32-E microcontroller board.
@@ -231,6 +235,7 @@
 #define TXT_WL_DISCONNECTED "Disconnected"
 
 // display strings
-#define TXT_EVENTS "events"
+#define TXT_PAST_EVENTS "past events"
+#define TXT_UPCOMINT_EVENTS "upcoming events"
 #define TXT_UNTIL "bis"
 #define TXT_FREE "Frei"

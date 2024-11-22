@@ -10,16 +10,6 @@
 DisplayBuffer::DisplayBuffer(int8_t pin_epd_cs, int16_t pin_epd_dc, int16_t pin_epd_rst, int16_t pin_epd_busy)
 {
 	this->display = new GxEPD2_DISPLAY_CLASS<GxEPD2_DRIVER_CLASS, MAX_HEIGHT(GxEPD2_DRIVER_CLASS)>(GxEPD2_DRIVER_CLASS(pin_epd_cs, pin_epd_dc, pin_epd_rst, pin_epd_busy));
-}
-
-// Function to test if a specific alignment flag is set
-bool hasAlignment(uint8_t alignment, Alignment flag)
-{
-	return (alignment & flag) == flag;
-}
-
-void DisplayBuffer::firstPage()
-{
 	display->setRotation(0);
 	display->setTextWrap(false);
 
@@ -27,8 +17,26 @@ void DisplayBuffer::firstPage()
 	display->setFullWindow();
 	setForegroundColor(Color::Black);
 	setBackgroundColor(Color::White);
+}
 
-	clearDisplay();
+Color DisplayBuffer::setForegroundColor(Color c)
+{
+	Color old = this->foregroundColor;
+	this->foregroundColor = c;
+	return old;
+}
+
+Color DisplayBuffer::setBackgroundColor(Color c)
+{
+	Color old = this->backgroundColor;
+	this->backgroundColor = c;
+	return old;
+}
+
+// Function to test if a specific alignment flag is set
+bool hasAlignment(uint8_t alignment, Alignment flag)
+{
+	return (alignment & flag) == flag;
 }
 
 void DisplayBuffer::clearDisplay()
@@ -81,6 +89,18 @@ bool containsAnyChar(const String &str1, const String &str2)
 	return false;
 }
 
+bool beginsAnyChar(const String &str1, const String &str2)
+{
+	for (size_t i = 0; i < str2.length(); i++)
+	{
+		if (str1.indexOf(str2[i]) == 0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 // Draw a String on x/y coordinate
 Rect DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t alignment)
 {
@@ -88,77 +108,58 @@ Rect DisplayBuffer::drawString(int16_t x, int16_t y, const String &text, uint8_t
 
 	if (hasAlignment(alignment, Alignment::HorizontalCenter))
 	{
-#if DEBUG_LEVEL >= 3
-		Serial.printf("[verbose] drawString: hasAlignment=HorizontalCenter (oldX: %d, newX: %d)\n", x, x - size->width / 2);
-#endif
 		x -= size->width / 2;
 	}
 	else if (hasAlignment(alignment, Alignment::Right))
 	{
-#if DEBUG_LEVEL >= 3
-		Serial.printf("[verbose] drawString: hasAlignment=Right (oldX: %d, newX: %d)\n", x, x - size->width);
-#endif
 		x -= size->width;
 	}
 	else if (hasAlignment(alignment, Alignment::Left))
 	{
-#if DEBUG_LEVEL >= 3
-		Serial.printf("[verbose] drawString: hasAlignment=Right (oldX: %d, newX: %d)\n", x, x);
-#endif
 		x = x;
 	}
 
 	if (hasAlignment(alignment, Alignment::VerticalCenter))
 	{
-#if DEBUG_LEVEL >= 3
-		Serial.printf("[verbose] drawString: hasAlignment=VerticalCenter (oldY: %d, newY: %d)\n", y, y + size->height / 2);
-#endif
 		y -= size->height / 2;
 	}
 	else if (hasAlignment(alignment, Alignment::Top))
 	{
-#if DEBUG_LEVEL >= 3
-		Serial.printf("[verbose] drawString: hasAlignment=Top (oldY: %d, newY: %d)\n", y, y + size->height);
-#endif
 		y = y;
 	}
 	else if (hasAlignment(alignment, Alignment::Bottom))
 	{
-#if DEBUG_LEVEL >= 3
-		Serial.printf("[verbose] drawString: hasAlignment=Bottom (oldY: %d, newY: %d)\n", y, y);
-#endif
 		y = y - size->height;
 	}
 
-#if DEBUG_LEVEL >= 3
-	Serial.printf("[verbose] Buffer: setCursor x=%d / y=%d\n", x, y);
-#endif
-
 	int offsetY = y + size->height;
+	int offsetX = x;
 
 	// I hate this!
 	// if the string to draw contains a descender, than we have to
 	// adjust the Y offset to include the descender height since print
-	bool containsDescender = containsAnyChar(text, "qypgj()");
-	if (containsDescender)
+	if (containsAnyChar(text, "qypgj()"))
 	{
 		offsetY -= size->height / 3;
 	}
 
+	if (beginsAnyChar(text, "1J"))
+	{
+		int16_t x, y;
+		uint16_t w, h;
+		display->getTextBounds("1", 0, 0, &x, &y, &w, &h);
+		offsetX -= w / 4 * 3;
+	}
+
 	display->setTextColor(foregroundColor);
-	display->setCursor(x, offsetY);
+	display->setCursor(offsetX, offsetY);
 	display->print(text);
 
 	Rect r;
-	r.x = x + 1;
-	r.y = y - 1;
-	r.width = size->width + 1;
+	r.x = x;
+	r.y = y;
+	r.width = size->width;
 	r.height = size->height;
-
-#if DEBUG_LEVEL >= 4
-	Serial.printf("Height: %d\n", r.height);
-	drawRect(r.x, r.y, r.width, r.height);
-#endif
 
 	return r;
 }
@@ -275,45 +276,27 @@ void DisplayBuffer::drawIcon(int16_t x, int16_t y, const String &iconName, int16
 {
 	if (hasAlignment(alignment, Alignment::HorizontalCenter))
 	{
-#if DEBUG_LEVEL >= 3
-		Serial.printf("[verbose] drawIcon: hasAlignment=HorizontalCenter (oldX: %d, newX: %d)\n", x, x - size / 2);
-#endif
 		x -= size / 2;
 	}
 	else if (hasAlignment(alignment, Alignment::Right))
 	{
-#if DEBUG_LEVEL >= 3
-		Serial.printf("[verbose] drawIcon: hasAlignment=Right (oldX: %d, newX: %d)\n", x, x - size);
-#endif
 		x -= size;
 	}
 	else if (hasAlignment(alignment, Alignment::Left))
 	{
-#if DEBUG_LEVEL >= 3
-		Serial.printf("[verbose] drawIcon: hasAlignment=Right (oldX: %d, newX: %d)\n", x, x);
-#endif
 		x = x;
 	}
 
 	if (hasAlignment(alignment, Alignment::VerticalCenter))
 	{
-#if DEBUG_LEVEL >= 3
-		Serial.printf("[verbose] drawIcon: hasAlignment=VerticalCenter (oldY: %d, newY: %d)\n", y, y - size / 2);
-#endif
 		y -= size / 2;
 	}
 	else if (hasAlignment(alignment, Alignment::Top))
 	{
-#if DEBUG_LEVEL >= 3
-		Serial.printf("[verbose] drawIcon: hasAlignment=Top (oldY: %d, newY: %d)\n", y, y);
-#endif
 		y = y;
 	}
 	else if (hasAlignment(alignment, Alignment::Bottom))
 	{
-#if DEBUG_LEVEL >= 3
-		Serial.printf("[verbose] drawIcon: hasAlignment=Bottom (oldY: %d, newY: %d)\n", y, y - size);
-#endif
 		y -= size;
 	}
 

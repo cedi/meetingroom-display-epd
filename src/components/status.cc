@@ -50,8 +50,6 @@ void Status::render(time_t now) const
 		statusMsg = currentEvent->getMessage() != "" ? currentEvent->getMessage() : currentEvent->getTitle();
 	}
 
-	buffer->setBackgroundColor(Color::White);
-	buffer->setForegroundColor(Color::Black);
 	Color fgSave = buffer->getForegroundColor();
 	Color bgSave = buffer->getBackgroundColor();
 
@@ -60,8 +58,8 @@ void Status::render(time_t now) const
 
 #if defined(DISP_3C) || defined(DISP_7C)
 		buffer->setForegroundColor(accentColor);
-#else
-		buffer->setBackgroundColor(Color::Black);
+#elif defined(INVERT_AS_ACCENT) && INVERT_AS_ACCENT == true
+		buffer->invert();
 		buffer->fillBackground(x, y, width, height);
 #endif
 
@@ -69,30 +67,36 @@ void Status::render(time_t now) const
 		maxTextWidth = width - 40;
 	}
 
+	// get the center of the screen
+	uint8_t alignment = Alignment::Center;
 	int startX = x + width / 2;
 	int startY = y + height / 2;
 
 	buffer->setFontSize(24);
 	TextSize *size = buffer->getStringBounds(statusMsg, maxTextWidth, 3);
 
-	// do a -5 so we can get some spacing in beetween the icon and the text
-	startY -= size->height / 2 - 10;
-
-	uint8_t alignment = Alignment::Center;
-
 	if (icon != "")
 	{
-		buffer->drawIcon(startX, startY - 10, icon, iconSize, Alignment::Center);
+		// we take into account the Text-height to center both icon and text
+		int iconYOffset = size->height / 2;
 
-		startY += iconSize / 2;
+		// add extra padding between the two
+		iconYOffset += 10;
 
-		// do a +10 so we can get some spacing in beetween the icon and the text
-		startY += 20;
+		// draw the icon
+		buffer->drawIcon(startX, startY - iconYOffset, icon, iconSize, Alignment::Center);
 
-		alignment = Alignment::HorizontalCenter | Alignment::Bottom;
+		// now move the Y start position down by twice the iconOffset
+		// since this already includes our padding, we should be good
+		// in terms of text spacing
+		startY += iconYOffset * 2;
+
+		// Now, since we have the Icon, we can't position the text
+		// vertically center, but let's do Top H-Center
+		alignment = Alignment::HorizontalCenter | Alignment::Top;
 	}
 
-	buffer->drawString(startX, startY + 10, statusMsg, alignment, maxTextWidth, 3);
+	buffer->drawString(startX, startY, statusMsg, alignment, maxTextWidth, 3);
 
 	// reset display color
 	buffer->setForegroundColor(fgSave);

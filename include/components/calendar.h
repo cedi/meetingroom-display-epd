@@ -21,5 +21,10 @@ public:
     virtual void render(time_t now) const override;
 
 protected:
-    virtual void renderCalendarEntry(int x, int y, const calendar_client::CalendarEntry &entry, time_t now) const;
+    bool checkTruncatedEvents(time_t now, int *displayable, int *skipped, int *more) const;
+    int renderSkippedEntries(int y, int skipped, int maxEntries, String eventsTxt, bool more) const;
+    int renderCalendarEntry(int x, int y, const calendar_client::CalendarEntry &entry, time_t now) const;
+    void renderCalendarEntryIcon(int x, int y, const calendar_client::CalendarEntry &entry, bool isPast, bool isCurrent) const;
+    void renderCalendarEntryTitle(int x, int y, const calendar_client::CalendarEntry &entry, bool isPast) const;
+    void renderCalendarEntryTime(int x, int y, const calendar_client::CalendarEntry &entry, bool isPast) const;
 };

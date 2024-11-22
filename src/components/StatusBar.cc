@@ -29,10 +29,7 @@ StatusBar::StatusBar(DisplayBuffer *buffer, calendar_client::CalendarClient *cal
 
 void StatusBar::render(time_t now) const
 {
-	buffer->setBackgroundColor(Color::White);
-	buffer->setForegroundColor(Color::Black);
-
-	buffer->drawLine(x, y + height, x + width, y + height);
+	buffer->drawHLine(x, y + height, width);
 
 	int xOffset = 0;
 	for (std::vector<StatusBarComponent *>::const_iterator it = leftBound.begin(); it != leftBound.end(); it++)
@@ -40,14 +37,14 @@ void StatusBar::render(time_t now) const
 		(*it)->render(xOffset, 0, now);
 		xOffset += (*it)->getWidth() + 10;
 
-		buffer->drawLine(xOffset, y, xOffset, y + height);
+		buffer->drawVLine(xOffset, y, height);
 	}
 
 	xOffset = width;
 	for (std::vector<StatusBarComponent *>::const_iterator it = rightBound.begin(); it != rightBound.end(); it++)
 	{
 		xOffset -= (*it)->getWidth();
-		buffer->drawLine(xOffset, y, xOffset, y + height);
+		buffer->drawVLine(xOffset, y, height);
 		(*it)->render(xOffset, y, now);
 	}
 
@@ -118,15 +115,11 @@ void BatteryPercentage::render(int x, int y, time_t now) const
 	uint32_t batteryVoltage = readBatteryVoltage();
 	uint32_t batPercent = calcBatPercent(batteryVoltage, MIN_BATTERY_VOLTAGE, MAX_BATTERY_VOLTAGE);
 
-	buffer->setBackgroundColor(Color::White);
-	buffer->setForegroundColor(Color::Black);
-	Color fgSave = buffer->getForegroundColor();
-	Color bgSave = buffer->getBackgroundColor();
-
 #if defined(DISP_3C) || defined(DISP_7C)
+	Color fgSave;
 	if (batPercent <= 10)
 	{
-		buffer->setForegroundColor(accentColor);
+		fgSave = buffer->setForegroundColor(accentColor);
 	}
 #endif
 
@@ -137,9 +130,10 @@ void BatteryPercentage::render(int x, int y, time_t now) const
 	xOffset += textSize.width + padding;
 	buffer->drawIcon(xOffset, y + height / 2, getBatBitmap(batPercent), 24, Alignment::Left | Alignment::VerticalCenter);
 
+#if defined(DISP_3C) || defined(DISP_7C)
 	// reset display color
-	buffer->setForegroundColor(fgSave);
-	buffer->setBackgroundColor(bgSave);
+	buffer->setBackgroundColor(fgSave);
+#endif
 }
 
 int WiFiStatus::getWidth() const
@@ -151,12 +145,8 @@ void WiFiStatus::render(int x, int y, time_t now) const
 {
 	int rssi = WiFi.RSSI();
 
-	buffer->setBackgroundColor(Color::White);
-	buffer->setForegroundColor(Color::Black);
-	Color fgSave = buffer->getForegroundColor();
-	Color bgSave = buffer->getBackgroundColor();
-
 #if defined(DISP_3C) || defined(DISP_7C)
+	Color fgSave;
 	if (rssi < -70)
 	{
 		buffer->setForegroundColor(accentColor);
@@ -166,8 +156,9 @@ void WiFiStatus::render(int x, int y, time_t now) const
 	buffer->drawIcon(x + padding, y + height / 2, getWiFiBitmap(rssi), iconSize, Alignment::Left | Alignment::VerticalCenter);
 
 	// reset display color
+#if defined(DISP_3C) || defined(DISP_7C)
 	buffer->setForegroundColor(fgSave);
-	buffer->setBackgroundColor(bgSave);
+#endif
 }
 
 // Returns 24x24 bitmap incidcating wifi status.
