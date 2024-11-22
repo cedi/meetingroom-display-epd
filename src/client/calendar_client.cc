@@ -5,6 +5,45 @@
 
 using namespace calendar_client;
 
+CustomStatus::CustomStatus(const JsonObject &json)
+{
+	if (json["icon"].is<const char *>())
+	{
+		icon = json["icon"].as<const char *>();
+	}
+	else
+	{
+		icon = ""; // Default value if key is missing or not a string
+	}
+
+	if (json["icon_size"].is<int>())
+	{
+		icon_size = json["icon_size"].as<int32_t>();
+	}
+	else
+	{
+		icon_size = 0; // Default value if key is missing or not an integer
+	}
+
+	if (json["title"].is<const char *>())
+	{
+		title = json["title"].as<const char *>();
+	}
+	else
+	{
+		title = ""; // Default value if key is missing or not a string
+	}
+
+	if (json["description"].is<const char *>())
+	{
+		description = json["description"].as<const char *>();
+	}
+	else
+	{
+		description = ""; // Default value if key is missing or not a string
+	}
+}
+
 CalendarEntry::CalendarEntry(const JsonObject &json)
 {
 	if (json["title"].is<const char *>())
@@ -51,6 +90,43 @@ CalendarEntry::CalendarEntry(const JsonObject &json)
 	}
 }
 
+int CalendarClient::fetchCustomStatus()
+{
+	int attempts = 0;
+	bool rxSuccess = false;
+
+	int httpResponse = 0;
+	do
+	{
+		wl_status_t connection_status = WiFi.status();
+		if (connection_status != WL_CONNECTED)
+		{
+			// -512 offset distinguishes these errors from httpClient errors
+			return -512 - static_cast<int>(connection_status);
+		}
+
+		HTTPClient http;
+		http.setConnectTimeout(HTTP_CLIENT_TCP_TIMEOUT); // default 10s
+		http.setTimeout(HTTP_CLIENT_TCP_TIMEOUT);		 // default 10s
+		http.addHeader(String("Content-Type"), String("application/protobuf"));
+
+		http.begin(client, apiEndpoint, apiPort, String("/status"));
+		httpResponse = http.GET();
+		Serial.println("HTTP Response: " + String(httpResponse, DEC));
+
+		if (httpResponse == HTTP_CODE_OK)
+		{
+			rxSuccess = parseCustomStatus(http);
+		}
+
+		client.stop();
+		http.end();
+		++attempts;
+	} while (!rxSuccess && attempts < 3);
+
+	return httpResponse;
+}
+
 int CalendarClient::fetchCalendar()
 {
 	int attempts = 0;
@@ -77,8 +153,7 @@ int CalendarClient::fetchCalendar()
 
 		if (httpResponse == HTTP_CODE_OK)
 		{
-			parseCalendar(http);
-			rxSuccess = true;
+			rxSuccess = parseCalendar(http);
 		}
 
 		client.stop();
@@ -175,6 +250,36 @@ const CalendarEntry *CalendarClient::getNextEvent(time_t now) const
 	}
 
 	return NULL;
+}
+
+bool CalendarClient::parseCustomStatus(HTTPClient &client)
+{
+	JsonDocument doc;
+	DeserializationError error = deserializeJson(doc, client.getStream());
+
+#if DEBUG_LEVEL >= 1
+	Serial.println("[debug] doc.overflowed() : " + String(doc.overflowed()));
+#endif
+#if DEBUG_LEVEL >= 2
+	serializeJsonPretty(doc, Serial);
+#endif
+
+	if (error)
+	{
+		return false;
+	}
+
+	customStatus = new CustomStatus(doc.as<JsonObject>());
+
+#if DEBUG_LEVEL >= 1
+	Serial.printf("[debug] lastUpdated: %ld\n", last_updated);
+#endif
+
+#if DEBUG_LEVEL >= 1
+	Serial.printf("[debug] calendar_events: %d\n", entries.size());
+#endif
+
+	return true;
 }
 
 bool CalendarClient::parseCalendar(HTTPClient &client)

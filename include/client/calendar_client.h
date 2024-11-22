@@ -48,6 +48,24 @@ namespace calendar_client
 
     typedef std::vector<CalendarEntry> CalendarEntries;
 
+    class CustomStatus
+    {
+    private:
+        String icon;
+        int32_t icon_size;
+        String title;
+        String description;
+
+    public:
+        CustomStatus() : icon(""), icon_size(0), title(""), description("") {}
+        CustomStatus(const JsonObject &json);
+
+        String getIcon() const { return icon; }
+        int32_t getIconSize() const { return icon_size; }
+        String getTitle() const { return title; }
+        String getDescription() const { return description; }
+    };
+
     class CalendarClient
     {
     protected:
@@ -57,10 +75,12 @@ namespace calendar_client
 
         time_t last_updated;
         CalendarEntries entries;
+        CustomStatus *customStatus;
 
     public:
         CalendarClient(String apiEndpoint, int apiPort) : apiEndpoint(apiEndpoint), apiPort(apiPort) {}
         int fetchCalendar();
+        int fetchCustomStatus();
 
         // get the current calendar event. If multiple events are going at the same time,
         // nowClosestToStart=true will return the event where the starting-time is closest to now
@@ -70,10 +90,12 @@ namespace calendar_client
 
         time_t getLastUpdated() const { return last_updated; }
         const CalendarEntries *getCalendarEntries() const { return &entries; }
+        const CustomStatus *getCustomStatus() const { return customStatus; }
 
         static const char *getHttpResponsePhrase(int code);
 
     protected:
         bool parseCalendar(HTTPClient &client);
+        bool parseCustomStatus(HTTPClient &client);
     };
 };

@@ -200,16 +200,24 @@ void setup()
 		beginDeepSleep(startTime);
 	}
 
-	int httpStatus = calClient.fetchCalendar();
-	if (httpStatus != HTTP_CODE_OK)
+	calClient.fetchCustomStatus();
+	const calendar_client::CustomStatus *stat = calClient.getCustomStatus();
+	if (stat != NULL && !stat->getTitle().isEmpty())
 	{
 		killWiFi();
 
+		epd.fullPageStatus(stat->getIcon(), stat->getIconSize(), stat->getTitle(), stat->getDescription(), mktime(&timeInfo));
+		beginDeepSleep(startTime);
+	}
+
+	int httpStatus = calClient.fetchCalendar();
+	killWiFi();
+	if (httpStatus != HTTP_CODE_OK)
+	{
 		std::stringstream ss;
-		ss << "Fetching calendar failed. " << httpStatus << ": " << calendar_client::CalendarClient::getHttpResponsePhrase(httpStatus);
+		ss << "Fetching calendar failed (HTTP=" << httpStatus << ")";
 
-		epd.error("wi_cloud_down", ss.str().c_str());
-
+		epd.error("wi_cloud_down", ss.str().c_str(), calendar_client::CalendarClient::getHttpResponsePhrase(httpStatus), mktime(&timeInfo));
 		beginDeepSleep(startTime);
 	}
 

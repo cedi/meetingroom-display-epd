@@ -77,43 +77,54 @@ void Display::_render(time_t now) const
 	buffer->drawVLine(buffer->width() / 2, StatusBar::StatusBarHeight, buffer->height());
 }
 
-void Display::_fullPageStatus(String icon, int16_t iconSize, const String &title, const String &description) const
+void Display::_fullPageStatus(String icon, int16_t iconSize, const String &title, const String &description, time_t now) const
 {
 	int startX = buffer->width() / 2;
 	int startY = buffer->height() / 2;
 
-	if (!title.isEmpty())
+	if (now != 0)
 	{
-		buffer->setFontSize(24);
-		TextSize *size = buffer->getStringBounds(title, buffer->width(), 4);
-		startY -= size->height / 2;
+		statusBar->render(now);
+		startY = StatusBar::StatusBarHeight + ((buffer->height() - StatusBar::StatusBarHeight) / 2);
 	}
+
+	uint8_t textAlignment = Alignment::HorizontalCenter | Alignment::Top;
+
+	buffer->setFontSize(24);
+	TextSize *titleSize = buffer->getStringBounds(title, buffer->width(), 1);
+	int totalDrawingSize = titleSize->height;
 
 	if (!description.isEmpty())
 	{
 		buffer->setFontSize(18);
-		TextSize *size = buffer->getStringBounds(description, buffer->width(), 4);
-		startY -= size->height / 2;
+		TextSize *descriptionSize = buffer->getStringBounds(title, buffer->width(), 3);
+		totalDrawingSize += descriptionSize->height;
+		totalDrawingSize += 5;
 	}
-
-	uint8_t alignment = Alignment::HorizontalCenter | Alignment::Bottom;
 
 	if (icon != "")
 	{
-		buffer->drawIcon(startX, startY - 10, icon, iconSize, Alignment::Center);
-		startY += iconSize / 2;
+		totalDrawingSize += iconSize;
+		totalDrawingSize += 5;
+
+		if (!description.isEmpty())
+		{
+			buffer->setFontSize(24);
+			buffer->drawString(startX, startY - totalDrawingSize / 2, title, textAlignment, buffer->width(), 1);
+		}
+
+		buffer->drawIcon(startX, startY, icon, iconSize, Alignment::Center);
 	}
 
-	if (!title.isEmpty())
+	if (icon != "" && description.isEmpty())
 	{
 		buffer->setFontSize(24);
-		Rect textSize = buffer->drawString(startX, startY + 10, title, alignment, buffer->width(), 4);
-		startY += textSize.height;
+		buffer->drawString(startX, startY + totalDrawingSize / 2, title, textAlignment, buffer->width(), 1);
 	}
 
 	if (!description.isEmpty())
 	{
 		buffer->setFontSize(18);
-		buffer->drawString(startX, startY + 10, description, Alignment::Center);
+		buffer->drawString(startX, startY + totalDrawingSize / 2, description, textAlignment, buffer->width(), 4);
 	}
 }

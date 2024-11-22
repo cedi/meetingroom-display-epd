@@ -68,7 +68,7 @@ public:
 
 	// Draw an error message to the display.
 	// If only title is specified, content of tilte is wrapped across two lines
-	void error(String icon, const String &title, const String &description = "")
+	void error(String icon, const String &title, const String &description = "", time_t now = 0)
 	{
 		if (!title.isEmpty())
 		{
@@ -88,23 +88,30 @@ public:
 
 		do
 		{
-			_fullPageStatus(icon, 196, title, description);
+			_fullPageStatus(icon, 196, title, description, now);
 		} while (buffer->nextPage());
 
 		powerOff();
 	}
 
-	void fullPageStatus(String icon, int16_t iconSize, const String &title, const String &description) const
+	void fullPageStatus(String icon, int16_t iconSize, const String &title, const String &description, time_t now)
 	{
+		if (!initialized)
+		{
+			init();
+		}
+
 		do
 		{
-			_fullPageStatus(icon, 196, title, description);
+			_fullPageStatus(icon, 196, title, description, now);
 		} while (buffer->nextPage());
+
+		powerOff();
 	}
 
 	// internal rendering functions.
 	// they draw the display, but do not take care of the nextPage. That is done in the public variants
 protected:
-	void _fullPageStatus(String icon, int16_t iconSize, const String &title, const String &description) const;
+	void _fullPageStatus(String icon, int16_t iconSize, const String &title, const String &description, time_t now) const;
 	void _render(time_t now) const;
 };

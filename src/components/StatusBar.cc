@@ -32,12 +32,17 @@ void StatusBar::render(time_t now) const
 	buffer->drawHLine(x, y + height, width);
 
 	int xOffset = 0;
+	bool drawOnLeftBound = false;
 	for (std::vector<StatusBarComponent *>::const_iterator it = leftBound.begin(); it != leftBound.end(); it++)
 	{
 		(*it)->render(xOffset, 0, now);
 		xOffset += (*it)->getWidth() + 10;
 
-		buffer->drawVLine(xOffset, y, height);
+		if (xOffset > 10)
+		{
+			buffer->drawVLine(xOffset, y, height);
+			drawOnLeftBound = true;
+		}
 	}
 
 	xOffset = width;
@@ -53,7 +58,18 @@ void StatusBar::render(time_t now) const
 
 	tm timeInfo = *localtime(&now);
 	String nowString = getRefreshTimeStr(&timeInfo, true);
-	buffer->drawString(xOffset, y + height / 2 - 1, nowString, Alignment::Center);
+
+	uint8_t alignment = Alignment::VerticalCenter;
+	if (drawOnLeftBound)
+	{
+		alignment |= Alignment::HorizontalCenter;
+	}
+	else
+	{
+		alignment |= Alignment::Left;
+	}
+
+	buffer->drawString(xOffset, y + height / 2 - 1, nowString, alignment);
 }
 
 String BatteryPercentage::getBatBitmap(uint32_t batPercent) const
@@ -191,6 +207,12 @@ int DateTime::getWidth() const
 	// get the lastRefreshTime from the server response (when was the)
 	// calendar updated...
 	time_t last_updated = calClient->getLastUpdated();
+
+	if (last_updated == 0)
+	{
+		return 0;
+	}
+
 	tm timeInfo = *localtime(&last_updated);
 	String refreshTimeStr = getRefreshTimeStr(&timeInfo, true);
 
@@ -210,6 +232,12 @@ void DateTime::render(int x, int y, time_t now) const
 	// get the lastRefreshTime from the server response (when was the)
 	// calendar updated...
 	time_t last_updated = calClient->getLastUpdated();
+
+	if (last_updated == 0)
+	{
+		return;
+	}
+
 	tm timeInfo = *localtime(&last_updated);
 	String refreshTimeStr = getRefreshTimeStr(&timeInfo, true);
 
