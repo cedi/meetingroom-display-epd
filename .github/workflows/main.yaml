@@ -66,6 +66,9 @@ jobs:
           for input in 24 32 48 128 196; do
             sh ./svg_to_headers.sh "$input"
           done
+          popd
+
+          mv icons/icons /lib/display-assets/
 
       - name: Build PlatformIO Project
         run: pio run
