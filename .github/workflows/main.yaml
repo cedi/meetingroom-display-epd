@@ -68,7 +68,8 @@ jobs:
           done
           popd
 
-          mv icons/icons /lib/display-assets/
+          rm -rf lib/display-assets/icons
+          mv icons/icons lib/display-assets/
 
       - name: Build PlatformIO Project
         run: pio run
