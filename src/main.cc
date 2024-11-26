@@ -44,6 +44,8 @@ Display epd(PIN_EPD_PWR, PIN_EPD_SCK, PIN_EPD_MISO, PIN_EPD_MOSI, PIN_EPD_CS, PI
 // Put esp32 into ultra low-power deep sleep (<11μA).
 void beginDeepSleep(unsigned long startTime)
 {
+	killWiFi();
+
 	tm timeInfo = {};
 	// only call getLocalTime if we havent gotten the ntp time yet
 	if (!getLocalTime(&timeInfo))
@@ -176,7 +178,6 @@ void setup()
 	// WiFi Connection Failed
 	if (wifiStatus != WL_CONNECTED)
 	{
-		killWiFi();
 
 		if (wifiStatus == WL_NO_SSID_AVAIL)
 		{
@@ -195,7 +196,6 @@ void setup()
 	bool timeConfigured = getNtpTime(&timeInfo);
 	if (!timeConfigured)
 	{
-		killWiFi();
 		epd.error("wi_time_4", "Time Synchronization Failed");
 		beginDeepSleep(startTime);
 	}
@@ -204,18 +204,15 @@ void setup()
 	const calendar_client::CustomStatus *stat = calClient.getCustomStatus();
 	if (stat != NULL && !stat->getTitle().isEmpty())
 	{
-		killWiFi();
-
 		epd.fullPageStatus(stat->getIcon(), stat->getIconSize(), stat->getTitle(), stat->getDescription(), mktime(&timeInfo));
 		beginDeepSleep(startTime);
 	}
 
 	int httpStatus = calClient.fetchCalendar();
-	killWiFi();
 	if (httpStatus != HTTP_CODE_OK)
 	{
 		std::stringstream ss;
-		ss << "Fetching calendar failed (HTTP=" << httpStatus << ")";
+		ss << "Fetching calendar failed";
 
 		epd.error("wi_cloud_down", ss.str().c_str(), calendar_client::CalendarClient::getHttpResponsePhrase(httpStatus), mktime(&timeInfo));
 		beginDeepSleep(startTime);
