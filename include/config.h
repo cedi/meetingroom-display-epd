@@ -52,6 +52,11 @@
 #define WIFI_PASSWORD "pZUfcu4xCg7p"
 #define WIFI_TIMEOUT 10000 // ms, WiFi connection timeout.
 
+// API
+#define API_ENDPOINT "hass.local"
+#define API_ENDPOINT_PORT 8099
+#define API_ENDPOINT_FETCH_CALENDAR "all"
+
 // HTTP
 // The following errors are likely the result of insuffient http client tcp timeout:
 //   -1   Connection Refused

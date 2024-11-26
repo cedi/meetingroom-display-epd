@@ -110,7 +110,7 @@ int CalendarClient::fetchCustomStatus()
 		http.setTimeout(HTTP_CLIENT_TCP_TIMEOUT);		 // default 10s
 		http.addHeader(String("Content-Type"), String("application/protobuf"));
 
-		http.begin(client, apiEndpoint, apiPort, String("/status"));
+		http.begin(client, apiEndpoint, apiPort, String("/status?calendar=") + String(API_ENDPOINT_FETCH_CALENDAR));
 		httpResponse = http.GET();
 		Serial.println("HTTP Response: " + String(httpResponse, DEC));
 
@@ -147,7 +147,7 @@ int CalendarClient::fetchCalendar()
 		http.setTimeout(HTTP_CLIENT_TCP_TIMEOUT);		 // default 10s
 		http.addHeader(String("Content-Type"), String("application/protobuf"));
 
-		http.begin(client, apiEndpoint, apiPort, String("/calendar"));
+		http.begin(client, apiEndpoint, apiPort, String("/calendar?calendar=") + String(API_ENDPOINT_FETCH_CALENDAR));
 		httpResponse = http.GET();
 		Serial.println("HTTP Response: " + String(httpResponse, DEC));
 

@@ -33,7 +33,7 @@
 #include "display.h"
 
 Preferences prefs;
-calendar_client::CalendarClient calClient("192.168.0.32", 8080);
+calendar_client::CalendarClient calClient(API_ENDPOINT, API_ENDPOINT_PORT);
 
 #if defined(DISP_3C) || defined(DISP_7C)
 Display epd(PIN_EPD_PWR, PIN_EPD_SCK, PIN_EPD_MISO, PIN_EPD_MOSI, PIN_EPD_CS, PIN_EPD_DC, PIN_EPD_RST, PIN_EPD_BUSY, &calClient, Color::Red);
