@@ -77,19 +77,16 @@ void Status::render(time_t now) const
 
 	if (icon != "")
 	{
-		// we take into account the Text-height to center both icon and text
-		int iconYOffset = size->height / 2;
+		// total_height = text_height + icon_height + padding
+		int totalHeight = size->height + iconSize + 5;
+		int iconYOffset = totalHeight / 2;
 
-		// add extra padding between the two
-		iconYOffset += 10;
+		startY -= iconYOffset;
 
 		// draw the icon
-		buffer->drawIcon(startX, startY - iconYOffset, icon, iconSize, Alignment::Center);
+		buffer->drawIcon(startX, startY, icon, iconSize, Alignment::HorizontalCenter | Alignment::Top);
 
-		// now move the Y start position down by the iconOffset
-		// since this already includes our padding, we should be good
-		// in terms of text spacing
-		startY += iconYOffset;
+		startY += iconSize;
 
 		// Now, since we have the Icon, we can't position the text
 		// vertically center, but let's do Top H-Center
